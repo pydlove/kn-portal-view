@@ -1,0 +1,16 @@
+:root{
+    --mbos-portal-monospace-font: Menlo, "Lucida Console", ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
+    --wb-button-secondary-icon-only-size: 24px;
+    --header-height: 48px;
+    --sub-nav-height: 48px;
+    --footer-height: 46px;
+    --title-padding: 16px;
+    --z-index-user-menu: 1000;
+    --z-index-sidebar: 900;
+    --z-index-global-header: 800;
+    --z-index-content-nav: 700;
+    --z-index-app-nav: 700;
+    --bar-move-time: .3s;
+    --bar-move-animation: var(--wb-move);
+    --primary-color: #0078D6 ;
+}

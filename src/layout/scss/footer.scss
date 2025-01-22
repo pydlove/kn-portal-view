@@ -1,0 +1,49 @@
+.footer {
+  background-color: var(--wb-grey-15);
+  width: 100%;
+  // margin-top: var(--wb-spacing-l);
+  margin-top: 32px;
+}
+.footer > wb-grid {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  height: var(--footer-height);
+  justify-content: space-between;
+}
+.icp {
+  margin-left: 125px;
+  color: #fff;
+  text-decoration: none;
+}
+.footer-left {
+  display: flex;
+}
+.footer-right {
+  width: auto;
+  display: flex;
+  gap: 24px;
+}
+.top-jump {
+  display: flex;
+  gap: 4px;
+  cursor: pointer;
+}
+.top-jump wb-icon {
+  --size: 16px;
+  align-self: center;
+}
+.docs-btn-absolute {
+  position: absolute;
+  bottom: calc(var(--footer-height) + var(--wb-spacing-s));
+  right: var(--wb-spacing-s);
+}
+.docs-btn-fixed {
+  position: fixed;
+  right: var(--wb-spacing-s);
+  bottom: var(--wb-spacing-s);
+}
+.docs-btn-wrapper {
+  position: sticky;
+  bottom: calc(-1 * var(--footer-height));
+}

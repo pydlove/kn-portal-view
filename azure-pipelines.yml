@@ -1,0 +1,60 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)
+variables:
+  - group: smartops-registry
+jobs:
+- job: Build
+  steps:
+  - checkout: self
+    clean: true
+    persistCredentials: true
+  - bash: |
+      echo "pipeline variable 'app.registry.url' was not set but is required."
+      exit 1
+    condition: eq(variables['app.registry.url'], '')
+    name: ValidateAppRegistryUrl
+  - bash: |
+      echo "pipeline variable 'app.registry.username' was not set but is required."
+      exit 1
+    condition: eq(variables['app.registry.username'], '')
+    name: ValidateAppRegistryUsername
+  - bash: |
+      echo "pipeline variable 'app.registry.password' was not set but is required."
+      exit 1
+    condition: eq(variables['app.registry.password'], '')
+    name: ValidateAppRegistryPassword
+  - bash: sudo apt-get install -y --no-install-recommends graphviz
+    name: Graphviz
+  - bash: |
+      BUILD_NUMBER=${BUILD_BUILDNUMBER}-$(git rev-parse --short ${BUILD_SOURCEVERSION})
+      echo "##vso[build.updatebuildnumber]${BUILD_NUMBER}"
+    name: Version
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '16.x'
+    displayName: 'Install Node.js'
+  - bash: |
+      echo "npm version: `npm -v`"
+      echo "node version: `node -v`"
+      echo "working folder: `pwd`"
+      cd ./mbos-template
+      npm config set registry https://registry.npmmirror.com
+      npm install --force
+      npm run build
+      ls
+    displayName: 'npm install and build'
+  - bash: |
+      docker login ${APP_REGISTRY_URL} -u ${APP_REGISTRY_USERNAME} -p ${APP_REGISTRY_PASSWORD}
+    name: DockerLogin
+    env:
+      APP_REGISTRY_PASSWORD: $(app.registry.password)
+      APP_REGISTRY_URL: $(app.registry.url)
+  - bash: |
+      cd ./mbos-template
+      ls
+      docker build $(Build.SourcesDirectory)/mbos-template \
+      -t ${APP_REGISTRY_URL}/mbos-template:${BUILD_BUILDNUMBER} \
+      -t latest
+    name: DockerBuild
+  - bash: |
+      docker push ${APP_REGISTRY_URL}/mbos-template:${BUILD_BUILDNUMBER}
+    name: DockerPush

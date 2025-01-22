@@ -1,0 +1,172 @@
+cache:
+  paths:
+    - gitlab/cicd/cache
+  # keep cache across branch
+  key: "$CI_COMMIT_REF_SLUG" 
+
+# include:
+  #- template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  # - project: "pub/mic-china/mre-components"
+  #  file: Dependency-Scanning.yml
+  #  ref: master
+
+  #- project: pub/mic-china/mre-components
+  #  file: Code-Quality.yml
+  #  ref: master
+
+  #- project: pub/mic-china/mre-components
+  #  file: SAST.yml
+  #  ref: master
+
+  #- project: pub/mic-china/mre-components
+  #  file: SAST-IAC.yml
+  #  ref: master
+
+  #- project: pub/mic-china/mre-components
+  #  file: Secret-Detection.yml
+  #  ref: master
+  
+  #- project: pub/mic-china/mre-components
+  #  file: Container-Scanning.yml
+  #  ref: master
+
+  #- project: pub/mic-china/mre-components
+  #  file: AzureKeyVaultPerJob.gitlab-ci.yml
+  #  ref: master
+
+
+# workflow:
+#   rules:
+#     - if: $CI_COMMIT_TAG
+#       when: never
+#     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+#     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+#       when: never
+#     - if: $CI_COMMIT_BRANCH
+#     - when: always        
+
+
+
+stages:
+  - packages
+  - build-nginx-image 
+  - image-check 
+  - deploy
+
+
+variables:
+  ## Runner env
+  RUNNER_TAG_EKS: "cnmic-public-runner-eks-docker"
+  RUNNER_TAG_VM: "cnmic-public-runner-vm-docker"
+  #RUNNER_CPU: "2"
+  #RUNNER_MEMORY: "4Gi"
+  KUBERNETES_CPU_REQUEST: "4"
+  KUBERNETES_MEMORY_REQUEST: "8Gi"
+
+
+  # pipeline image repo 
+  CI_REGISTRY_DOMAIN: cnmicbase.azurecr.cn
+  CI_REGISTRY_IMAGE_PATH: cnmicbase.azurecr.cn/pipeline
+
+  ## Project image repo
+  DATADOG_VERSION: 1.27.0
+  BASE_ACR_SUBSCRIPTION_ID: 67682335-86a9-44d7-807a-a8e85016073d
+  BASE_ACR_DOMAIN: cnmicbase.azurecr.cn
+  APP_ACR_SUBSCRIPTION_ID: 9a75d0af-28cf-418f-a4e0-d749f5b910eb
+  APP_ACR_DOMAIN: cnmiccbdt.azurecr.cn
+  ACR_CLIENT_ID: aa296f75-2dca-4af9-9486-958e851ab360
+  ACR_CLIENT_SECRET: 1~6~9re.J6_sIDw~mV41PMoKGdYf6~V4Dn
+                     
+  
+  ## App Paras
+  MAJOR_VERION: "1"
+  APP_KEY: cbdt
+  APP_NAME: cbdt-front
+  APP_SUITE: cbdt
+  APP_VERSION: ${MAJOR_VERION}.${CI_PIPELINE_IID}.${CI_COMMIT_SHORT_SHA}
+  APP_IMAGE_TAG: cdbt_front_${CI_COMMIT_SHORT_SHA}
+  # APP_IMAGE_REPO: cbdt
+  # APP_IMAGE_URL: $APP_ACR_DOMAIN/$APP_IMAGE_REPO/$APP_NAME:$APP_IMAGE_TAG
+  APP_IMAGE_URL: $APP_ACR_DOMAIN/$APP_NAME:$APP_IMAGE_TAG
+
+  # npm_builld
+  NODE_IMAGE_TAG: 18 
+  
+
+
+npm-build: 
+  stage: packages
+  # node.js镜像
+  image: ${CI_REGISTRY_IMAGE_PATH}/node:${NODE_IMAGE_TAG}
+  tags:
+    - ${RUNNER_TAG_EKS}
+  script:
+    - echo "build npm dist package"
+    - npm config set registry https://registry.npmmirror.com/
+    - npm install 
+    - npm run build
+
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
+
+
+docker-build: 
+  stage: build-nginx-image
+  # docker镜像
+  image: ${CI_REGISTRY_IMAGE_PATH}/docker:20.10.12
+  tags:
+    - ${RUNNER_TAG_EKS}
+  services:
+    - name: '${CI_REGISTRY_IMAGE_PATH}/docker:20.10.12-dind'
+      command: ['--tls=false', '--host=tcp://0.0.0.0:2375']
+  needs: ["npm-build"]
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - mkdir -p $HOME/.docker
+    - |
+      echo "{
+        \"auths\": {
+          \"cnmicbase.azurecr.cn\": {
+            \"auth\": \"Y2IxZDZmNjYtODFkZC00MGVmLThiMzQtMzhiMzEyMTYwN2U5Ojg1YWxOOE94TnY1dk5afkd+bXA5b2dQOG4uMH5XQ3BGV0Q=\"
+          },
+          \"$APP_ACR_DOMAIN\": {
+            \"auth\": \"$(echo -n "$ACR_CLIENT_ID:$ACR_CLIENT_SECRET" | base64 | tr -d '\n')\"
+          }
+        }
+      }" > $HOME/.docker/config.json
+    - echo "判断环境类型"
+    - echo "替换docker nginx.conf"
+  script:
+    - export SOURCE_CODE=${SOURCE_CODE:-$PWD}
+    - export DOCKER_HOST='tcp://localhost:2375'
+    - echo "build nginx docker image"
+    - docker build -t $APP_IMAGE_URL .
+    - docker push $APP_IMAGE_URL
+
+deploy_tke: 
+  stage: deploy 
+  # image: ${CI_REGISTRY_IMAGE_PATH}/kubectl:latest
+  image: $CI_REGISTRY_IMAGE_PATH/ubuntu-tccli-helm:0.3
+  tags:
+    - ${RUNNER_TAG_EKS}
+  needs: ["docker-build"]
+  variables:
+    ACR_CLOUD: "china"
+    ACR_STAGE: "cnmicbase"
+    CLUSTER_NAMESPACE: default
+    RELEASE_ENVIRONMENTNAME: china.nonprod
+    CI_DEBUG_TRACE: "true"
+
+  script:
+    - mkdir -p ~/.kube && touch ~/.kube/config
+    - KUBECONFIG_TKE="${env}_KUBECONFIG_TKE"
+    - echo "${!KUBECONFIG_TKE}"> ~/.kube/config
+    - cat ~/.kube/config
+    - ls -al  ./pipelines/
+    - chmod +x ./pipelines/deploy-tke.sh
+    - ./pipelines/deploy-tke.sh
+

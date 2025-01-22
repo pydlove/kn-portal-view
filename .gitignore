@@ -1,0 +1,44 @@
+# Portal
+gateway.env.json
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+package-lock.json
+.vscode
+
+/cypress/videos/
+/cypress/screenshots/
+
+# Editor directories and files
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Terraform
+.terraform
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
