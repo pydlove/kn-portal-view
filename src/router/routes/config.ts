@@ -19,6 +19,11 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
     component: () => import('@/views/login/index.vue')
   },
   {
+    path: '/apply',
+    name: 'apply',
+    component: () => import('@/views/table/apply/index.vue')
+  },
+  {
     path: '/test',
     name: 'test',
     component: () => import('@/views/test/index.vue')

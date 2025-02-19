@@ -2,9 +2,19 @@
   <div class="ts-container">
     <a-card>
       <a-input-search
-        addon-before="Wiwid"
+        addon-before="申请人"
         class="search-input"
-        v-model:value="searchValue"
+        v-model:value="username"
+        placeholder="Please input wiwid"
+        :loading="isSearchLoading"
+        style="display: block"
+        @search="getSearchList"
+      />
+
+      <a-input-search
+        addon-before="申请单号"
+        class="search-input"
+        v-model:value="applyNo"
         placeholder="Please input wiwid"
         :loading="isSearchLoading"
         style="display: block"
@@ -16,15 +26,15 @@
       <a-button type="primary" @click="openApplyModal">申请权限</a-button>
 
       <a-table
-        :columns="TestTableColumns"
-        :data-source="dataSource"
+        :columns="applyTableColumns"
+        :data-source="applyData"
         :loading="isLoading"
         :pagination="pagination"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'action'">
             <a>编辑</a>
-            <a-divider type="vertical" />
+            <a-divider type="vertical"/>
             <a>删除</a>
           </template>
         </template>
@@ -32,18 +42,20 @@
     </a-card>
 
     <!-- 引入 Apply 组件 -->
-    <apply-modal ref="applyModal" :dataTableName="dataTableName" :dataTableId="dataTableId" @submit="handleApplySubmit" @cancel="handleApplyCancel"></apply-modal>
+    <apply-modal ref="applyModal" :dataTableName="dataTableName"
+                 :dataTableId="dataTableId"></apply-modal>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, defineComponent, onMounted, ref } from 'vue';
-import { getTestPage } from '@/api/test/test';
-import { TestTableColumns, DataItem } from './index';
-import ApplyModal from '@/components/Apply.vue';
+import {computed, defineComponent, onMounted, ref} from 'vue';
+import {applyTableColumns, DataItem} from './index';
+import ApplyModal from '../../../components/Apply.vue';
+import {getApplyPage} from "@/api/table/apply";
 
-const searchValue = ref('');
-const dataSource = ref<DataItem[]>([]);
+const username = ref('');
+const applyNo = ref('');
+const applyData = ref<DataItem[]>([]);
 const isLoading = ref<boolean>(false);
 const isSearchLoading = ref<boolean>(false);
 
@@ -67,19 +79,19 @@ const getSearchList = () => {
 
 const fetchData = async (current?: number, pageSize?: number) => {
   isLoading.value = true;
-  const res: { rows: DataItem[]; total: number } = await getTestPage({
-    name: searchValue.value,
+  const res: { rows: DataItem[]; total: number } = await getApplyPage({
+    username: username.value,
+    applyNo: applyNo.value,
     page: current || pagination.value.current,
     rows: pageSize || pagination.value.pageSize,
   });
-  console.log(res);
 
   isLoading.value = false;
   isSearchLoading.value = false;
   pagination.value.total = res.total;
   current && (pagination.value.current = current);
   pageSize && (pagination.value.pageSize = pageSize);
-  dataSource.value = Array.isArray(res.rows) ? res.rows : [];
+  applyData.value = Array.isArray(res.rows) ? res.rows : [];
 };
 
 onMounted(() => {
@@ -95,23 +107,13 @@ const openApplyModal = () => {
   }
 };
 
-const handleApplySubmit = async (dataTableId: string, dataTableName: string) => {
-  // 处理提交逻辑
-  console.log('数据表ID:', dataTableId);
-  console.log('数据表名称:', dataTableName);
-  // 可以在这里调用 onSubmitApply 方法
-};
-
-const handleApplyCancel = () => {
-  // 处理取消逻辑
-  console.log('申请已取消');
-};
 </script>
 
 <style scoped>
 .ts-container {
   padding: 16px;
 }
+
 .search-input {
   min-width: 100px;
   max-width: 300px;

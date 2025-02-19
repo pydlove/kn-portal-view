@@ -26,7 +26,7 @@ const loginStore = useLoginStore()
 
 const login = async () => {
 
-  console.log(userName.value, password.value)
+  console.log(username.value, password.value)
   // const {randomCode, randomId} = await getRandomCode()
   // const userPwd = encrypt(password.value, randomCode)
   // console.log(userPwd)
