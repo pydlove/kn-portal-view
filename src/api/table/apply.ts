@@ -14,3 +14,19 @@ export function getApplyPage(data: any) {
     method: 'get'
   })
 }
+
+export function updateApply(data: any) {
+  return request({
+    url: '/apply/update',
+    data,
+    method: 'post'
+  })
+}
+
+export function batchUpdateApply(data: any) {
+  return request({
+    url: '/apply/batch-update',
+    data,
+    method: 'post'
+  })
+}

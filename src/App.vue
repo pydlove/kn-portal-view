@@ -1,6 +1,9 @@
 <template>
   <ConfigProvider :theme="globalStore.themeConfig">
-    <RouterView />
+    <Header />
+    <div class="main-pages" >
+      <RouterView />
+    </div>
   </ConfigProvider>
 </template>
 
@@ -8,6 +11,8 @@
 import { RouterView } from 'vue-router'
 import { ConfigProvider } from 'ant-design-vue'
 import { useGlobalStore } from '@/store/modules/global'
+import Header from './components/Header.vue';
+
 const globalStore = useGlobalStore()
 </script>
 
@@ -16,5 +21,7 @@ const globalStore = useGlobalStore()
   flex: 1;
   height: 100%;
   max-height: 100%;
+  width: 80%;
+  margin: 0 auto;
 }
 </style>

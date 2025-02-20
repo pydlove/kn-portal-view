@@ -10,7 +10,7 @@ const applyTableColumns = [
     key: 'username',
   },
   {
-    title: '申请表',
+    title: '申请访问表',
     dataIndex: 'tableName',
     key: 'tableName',
   },
@@ -30,15 +30,25 @@ const applyTableColumns = [
     key: 'createTime',
   },
   {
-    title: '审批状态',
-    dataIndex: 'applyStatus',
-    key: 'applyStatus',
+    title: '更新时间',
+    dataIndex: 'updateTime',
+    key: 'updateTime',
   },
   {
-    title: '审批备注',
-    dataIndex: 'applyResult',
-    key: 'applyResult',
+    title: '审批状态',
+    dataIndex: 'chApplyStatus',
+    key: 'applyStatus',
   },
+  // {
+  //   title: '审批备注',
+  //   dataIndex: 'applyResult',
+  //   key: 'applyResult',
+  // },
+  {
+    title: '操作',
+    dataIndex: 'operation',
+    width: 150
+  }
 ]
 interface DataItem {
   id: number
@@ -49,6 +59,7 @@ interface DataItem {
   purpose: string
   applyReason: string
   createTime: string
+  isChecked: boolean
 }
 
 export { applyTableColumns, DataItem }

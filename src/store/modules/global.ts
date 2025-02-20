@@ -23,9 +23,9 @@ export const useGlobalStore = defineStore(
       setRepeatSubmit,
       themeConfig: {
         token: {
-          colorPrimary: '#1677ff',
-          borderRadius: 2,
-          fontSize: 16
+          // colorPrimary: '#1677ff',
+          borderRadius: 3,
+          // fontSize: 16
         }
       }
     }

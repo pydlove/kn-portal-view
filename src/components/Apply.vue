@@ -90,6 +90,13 @@ const handleSubmit = async () => {
     });
     message.success('申请已成功提交');
     isModalVisible.value = false;
+
+    // 清空表单值
+    applyUser.value = '';
+    applyReason.value = '';
+    purpose.value = '';
+    applyNo.value = generateApplyNo();
+
   } catch (error) {
     message.error('提交失败，请稍后重试');
   }

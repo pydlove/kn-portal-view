@@ -14,3 +14,13 @@
     --bar-move-animation: var(--wb-move);
     --primary-color: #0078D6 ;
 }
+
+.mr-20 {
+  margin-right: 20px;
+}
+.mb-20 {
+  margin-bottom: 20px;
+}
+.wd-100 {
+  width: 100px;
+}

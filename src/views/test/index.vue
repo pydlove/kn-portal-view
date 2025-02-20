@@ -54,7 +54,7 @@ const pagination = ref({
   current: 1,
   pageSize: 15,
   total: 0,
-  showTotal: (total: number) => `Total ${total} items`,
+  showTotal: (total: number) => `共 ${total} 条`,
   onChange: (page: number, pageSize: number) => {
     fetchData(page, pageSize);
   },

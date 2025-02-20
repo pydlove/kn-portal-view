@@ -38,7 +38,7 @@ const login = async () => {
     // const res = await onLogin({username, userPwd, randomId})
     console.log(res)
     router.push({
-      path: '/test'
+      path: '/apply'
     })
 
   } catch (e) {}
