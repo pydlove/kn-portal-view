@@ -11,21 +11,25 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'root',
+    meta: { hideHeader: false },
     component: import('@/views/login/index.vue')
   },
   {
     path: '/login',
     name: 'login',
+    meta: { hideHeader: true },
     component: () => import('@/views/login/index.vue')
   },
   {
     path: '/apply',
     name: 'apply',
+    meta: { hideHeader: false },
     component: () => import('@/views/table/apply/index.vue')
   },
   {
     path: '/test',
     name: 'test',
+    meta: { hideHeader: false },
     component: () => import('@/views/test/index.vue')
   },
 ]

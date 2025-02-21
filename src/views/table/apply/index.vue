@@ -20,6 +20,8 @@
 <!--        </a-button>-->
         <a-button class="mr-20 mb-20" type="primary" @click="openApplyModal">申请权限
         </a-button>
+        <a-button class="mr-20 mb-20" type="primary" @click="checkAccessAuthRequest">检测是否有权限访问表
+        </a-button>
       </div>
       <a-table
         :columns="applyTableColumns"
@@ -66,6 +68,7 @@ import {applyTableColumns, DataItem} from './index';
 import ApplyModal from '../../../components/Apply.vue';
 import {batchUpdateApply, getApplyPage, updateApply} from "@/api/table/apply";
 import {message, Modal} from "ant-design-vue";
+import { checkAccessAuth } from '@/api/table/dataAuth';
 
 const allSelected = ref(false);
 
@@ -230,6 +233,21 @@ const handleCheckboxChange = (record: DataItem, event: any) => {
   }
   allSelected.value = selectedRowKeys.value.length === applyData.value.length;
 };
+
+const checkAccessAuthRequest = async () => {
+  try {
+    const hasAccess = await checkAccessAuth({tableId: 1});
+    if (hasAccess) {
+      message.success('您可以访问该表');
+    } else {
+      message.error('您没有权限访问该表');
+    }
+  } catch (error) {
+    console.error('检查权限失败:', error);
+    message.error('检查权限失败，请稍后再试');
+  }
+};
+
 
 onMounted(() => {
   fetchData();

@@ -1,7 +1,7 @@
 <template>
   <ConfigProvider :theme="globalStore.themeConfig">
-    <Header />
-    <div class="main-pages" >
+    <Header v-if="!$route.meta.hideHeader" />
+    <div :class="!$route.meta.hideHeader? 'main-pages':'login-page'">
       <RouterView />
     </div>
   </ConfigProvider>
@@ -23,5 +23,10 @@ const globalStore = useGlobalStore()
   max-height: 100%;
   width: 80%;
   margin: 0 auto;
+}
+.login-page {
+  flex: 1;
+  height: 100%;
+  max-height: 100%;
 }
 </style>

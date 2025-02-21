@@ -1,7 +1,7 @@
 <template>
   <a-layout-header class="header">
     <div class="logo">
-      <img :src="logo" alt="logo" />
+      <img :src="logo" alt="logo"/>
       <span>一表通</span>
     </div>
     <a-menu mode="horizontal" :selected-keys="selectedKeys">
@@ -16,22 +16,27 @@
       </a-menu-item>
     </a-menu>
     <div class="right-section">
-      <a-popover placement="bottom" trigger="hover" @visible-change="handlePopoverVisibleChange">
+      <a-popover
+        placement="bottom"
+        trigger="hover"
+        :visible="popoverVisible"
+        @visible-change="handlePopoverVisibleChange"
+      >
         <template #content>
           <div class="notification-content">
-            <p>消息1: 您有一条新消息</p>
-            <p>消息2: 项目更新通知</p>
-            <p>消息3: 任务提醒</p>
+            <p v-for="(message, index) in messageData" :key="index">
+              消息{{ index + 1 }}: {{ message.content }}
+            </p>
           </div>
         </template>
         <a-badge :count="messageCount" :offset="[10, 0]">
-          <BellOutlined />
+          <BellOutlined/>
         </a-badge>
       </a-popover>
       <a-dropdown trigger="click">
         <span class="ant-dropdown-link">
-          <UserOutlined />
-          <span class="ant-dropdown-icon-sizer" />
+          <UserOutlined/>
+          <span class="ant-dropdown-icon-sizer"/>
         </span>
         <template #overlay>
           <a-menu>
@@ -46,21 +51,18 @@
 
 <script setup>
 import logo from '@/assets/images/logo.png';
-import { ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { Badge, Dropdown, Menu, Popover, message } from 'ant-design-vue';
-import { BellOutlined, UserOutlined } from '@ant-design/icons-vue';
-// import { readMessage } from '@/api/login/header';
+import {onMounted, ref, watch} from 'vue';
+import {useRoute} from 'vue-router';
+import {Badge, Dropdown, Menu, Popover, message} from 'ant-design-vue';
+import {BellOutlined, UserOutlined} from '@ant-design/icons-vue';
+import {readMessage, messagePage} from '@/api/login/header.ts';
 
-// 获取当前路由信息
 const route = useRoute();
-// 用于存储当前选中菜单项的 key
 const selectedKeys = ref([]);
+const messageData = ref([]);
+const messageCount = ref(5);
+const popoverVisible = ref(false);
 
-// 消息提示的数量
-const messageCount = ref(5); // 你可以根据需要动态设置这个值
-
-// 监听路由 name 的变化，更新选中项
 watch(
   () => route.name,
   (newName) => {
@@ -74,11 +76,43 @@ watch(
 );
 
 // 处理 popover 显示状态变化
-const handlePopoverVisibleChange = (visible) => {
+const handlePopoverVisibleChange = async (visible) => {
   if (visible) {
-      message.success('消息已读')
+
+    popoverVisible.value = true;
+    try {
+      // 遍历 messageData 获取消息的 id 数组
+      const messageIds = messageData.value.map((message) => message.id);
+      console.log(messageIds);
+      await readMessage({ids: messageIds});
+      fetchMessages();
+    } catch (error) {
+      console.error('标记消息为已读失败:', error);
+    }
+  } else {
+    setTimeout(() => {
+      popoverVisible.value = false;
+    }, 3000);
   }
 };
+
+const fetchMessages = async () => {
+  try {
+    const res = await messagePage({
+      page: 1,
+      rows: 10,
+    });
+    console.log('header', res);
+    messageCount.value = res.total;
+    messageData.value = res.rows;
+  } catch (error) {
+    console.error('获取消息失败:', error);
+  }
+};
+
+onMounted(() => {
+  fetchMessages();
+});
 </script>
 
 <style scoped>
