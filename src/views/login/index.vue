@@ -34,11 +34,11 @@ const login = async () => {
   const passwordValue = password.value
 
   try {
-    const res = await loginStore.login({ usernameValue, passwordValue })
+    const {firstUrl, res} = await loginStore.login({ usernameValue, passwordValue })
     // const res = await onLogin({username, userPwd, randomId})
-    console.log(res)
+    console.log(firstUrl)
     router.push({
-      path: '/apply'
+      path: firstUrl.menuUrl
     })
 
   } catch (e) {}

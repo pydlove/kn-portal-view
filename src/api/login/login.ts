@@ -20,6 +20,13 @@ export function getRandomCode(data?: any) {
   })
 }
 
+export function logout(data: any) {
+  return request({
+    url: '/login/logout',
+    data,
+    method: 'get'
+  })
+}
 export function onSSO(data: any) {
   return request({
     url: '/login/sso',

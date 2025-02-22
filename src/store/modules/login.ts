@@ -86,9 +86,8 @@ export const useLoginStore = defineStore(
         const userPwd = encrypt(params.passwordValue, randomCode)
         const username = params.usernameValue
         const res = await onLogin({ username, userPwd, randomId })
-        // const { menusAuthList = [], userName: _userName } = res || []
-        // const _menusMap = getMenuInfoMap({ menusList: menusAuthList })
-
+        const { menuList = [], userName: _userName } = res || []
+        // const _menusMap = getMenuInfoMap({ menusList: menuList })
         // const hasPermission = Object.values(_menusMap).some((item: any) => item.viewable)
         //
         // if (!hasPermission) {
@@ -96,14 +95,14 @@ export const useLoginStore = defineStore(
         //   return
         // }
         // sessionStorage.setItem('_menusMap', JSON.stringify(_menusMap))
-        // sessionStorage.setItem('_menus', JSON.stringify(menusAuthList))
+        sessionStorage.setItem('_menus', JSON.stringify(menuList))
         // menus.value = menusAuthList
         // menusMap.value = _menusMap
         // userName.value = _userName
-        // const firstUrl = getFirstUrl(menusAuthList)
+        const firstUrl = menuList[0]
 
         return Promise.resolve({
-          // firstUrl,
+          firstUrl,
           response: res
         })
       } catch (error) {
@@ -157,4 +156,10 @@ export const useLoginStore = defineStore(
 
 export function useLoginStoreWithOut() {
   return useLoginStore(store)
+}
+
+interface MenuItem {
+  menuCode: string;
+  menuName: string;
+  menuUrl: string;
 }

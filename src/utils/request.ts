@@ -42,7 +42,7 @@ service.interceptors.request.use(
     const loginStore = useLoginStoreWithOut()
     const token = loginStore.token
 
-    console.log(token, ' request token ')
+    // console.log(token, ' request token ')
     if (token && config.headers) {
       config.headers['token'] = token
     }
@@ -87,7 +87,7 @@ service.interceptors.response.use(
     const loginStore = useLoginStoreWithOut()
     const { token } = response.headers
 
-    console.log(token, ' request token ')
+    // console.log(token, ' request token ')
     if (token) {
       loginStore.setToken(token)
     }
