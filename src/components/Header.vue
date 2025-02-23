@@ -97,6 +97,7 @@ const messageCount = ref(0);
 const popoverVisible = ref(false);
 
 const handleMenuClick = (menuCode) => {
+  sessionStorage.setItem('menuCode', menuCode);
   selectedKeys.value = [menuCode];
   const activeMenu = menus.value.find(menu => menu.menuCode === menuCode);
   if (activeMenu) {
