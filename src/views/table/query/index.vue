@@ -54,7 +54,7 @@ const barData = ref<barDataItem>(null);
 const handleQuery = async () => {
   if (!query.value) {
     message.warning('请输入查询内容');
-    return;
+    return
   }
 
   try {
