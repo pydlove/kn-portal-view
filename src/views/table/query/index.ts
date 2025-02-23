@@ -3,4 +3,10 @@ interface barDataItem {
   yAxis: []
 }
 
-export { barDataItem }
+interface TableVo {
+   tableId:"",
+   tableName:"",
+   tableComment:""
+}
+
+export { barDataItem, TableVo}

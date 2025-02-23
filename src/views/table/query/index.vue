@@ -7,22 +7,36 @@
 
     <!-- 右侧内容 -->
     <a-card class="right-card">
-      <a-textarea
-        v-model:value="query"
-        placeholder="请输入您要查询的内容，按Enter键发送查询"
-        style="margin-left: 20%;width: 60%;white-space: pre-wrap;resize: none;"
-        :loading="isSearchLoading"
-        :auto-size="{ minRows: 2, maxRows: 2 }"
-        @keydown.enter.native="removeNewline"
-        @keydown.enter="handleQuery"
-      />
+      <div style="width: 100%;float: left;">
+        <a-button class="change-view" type="dashed" shape="round" @click="changeView">切换表</a-button>
+        <a-textarea
+          v-model:value="query"
+          placeholder="请输入您要查询的内容，按Enter键发送查询"
+          style="margin-left: calc(20% - 100px);width: calc(40% + 200px);white-space: pre-wrap;resize: none;float: left;"
+          :loading="isSearchLoading"
+          :auto-size="{ minRows: 2, maxRows: 2 }"
+          @keydown.enter.native="removeNewline"
+          @keydown.enter="handleQuery"
+        />
+      </div>
 
-      <div class="table-info" v-show="data.isShow" @click="">
-        test
+      <div class="table-info" v-if="data.isShow">
+        <a-row :gutter="[16, 16]">
+          <a-col :span="6" v-for="item in data.cardData" :key="item.tableId">
+            <a-card class="table-card" :title="item.tableName">
+              <div class="table-desc">{{ item.tableComment }}</div>
+              <div class="table-handle">
+                <a-button class="handle" type="dashed" shape="round" @click="preview(item)" >预览</a-button>
+                <a-button class="handle" type="dashed" shape="round" @click="question(item)" >提问</a-button>
+              </div>
+
+            </a-card>
+          </a-col>
+        </a-row>
       </div>
 
       <!-- 查询结果展示 -->
-      <div class="data-info" v-show="!data.isShow">
+      <div class="data-info" v-if="!data.isShow">
         <div class="results-container">
           <h3>查询结果</h3>
   <!--          <a-table :columns="columns" :data-source="results"/>-->
@@ -43,8 +57,9 @@ import {Bar} from 'vue-chartjs';
 import {ref, computed, reactive} from 'vue';
 import {message} from 'ant-design-vue';
 import BarChart from '../../../components/charts/BarChart.vue';
+import {getAllTable} from "@/api/table/table";
 import {talkQuestion} from "@/api/table/query";
-import {barDataItem} from "@/views/table/query/index"; // 确保导入的是正确的函数
+import {barDataItem, TableVo} from "@/views/table/query/index"; // 确保导入的是正确的函数
 
 const query = ref('');
 const results = ref<barDataItem[]>([]); // 定义 results 的类型
@@ -53,11 +68,35 @@ const chartData = ref(null);
 const chart = ref(null);
 const barData = ref<barDataItem>(null);
 const data = reactive({
-    isShow: false
+    isShow: false,
+    cardData:[]
 })
 
 const removeNewline = (event) =>{
   event.preventDefault(); 
+}
+
+const changeView = () =>{
+  data.isShow = true;
+  queryTableInfo()
+}
+
+const queryTableInfo = async () => {
+  try {
+    const res: { rows: TableVo[];} = await getAllTable()
+    data.cardData = res;
+
+  } catch (e) {}
+}
+
+const preview = (item) =>{
+  data.isShow = false;
+  console.log(item)
+}
+
+const question = (item) =>{
+  data.isShow = false;
+  console.log(item)
 }
 
 const handleQuery = async () => {
@@ -68,7 +107,7 @@ const handleQuery = async () => {
   }
 
   try {
-    const res = await talkQuestion({tableName: 't_disability_info', content: query.value})
+    const res = await getAllTable({tableName: 't_disability_info', content: query.value})
     barData.value = res.barData
     console.log(barData.value)
     if (chart.value) {
@@ -90,21 +129,17 @@ const handleNewDialog = () => {
 </script>
 
 <style scoped>
-.results-container {
-  margin-top: 20px;
-  width: 80%;
-  height: 500px;
-}
-
-.chart-container {
-  margin-top: 20px;
-  width: 80%;
-}
-
-
-.container{margin-top: 16px;width: 100%; height: 500px; float: left;}
+.container{margin-top: 16px;width: 100%; height: 600px; float: left;}
 .left-card{width: 220px; height: 100%;float: left;border-color: #C5C5C5}
 .right-card{margin-left: 10px;width: calc(100% - 230px); height: 100%;float: left;border-color: #C5C5C5}
+.change-view{width:100px;height:48px;float: left;border-color: #409EFF;color: #409EFF}
+.table-info{margin-top: 70px;}
+.data-info{margin-top: 70px;}
+.table-card{background-color: #f2f2f2;}
+::v-deep .ant-card-head{background-color: #D3C4E1;}
+.table-desc{margin-top: -10px;}
+.table-handle{margin-top: 20px;float: right};
+::v-deep .ant-card .ant-card-body{background-color: #C5C5C5;}
 ::-webkit-scrollbar {width: 3px;height: 3px;}
 ::-webkit-scrollbar-track {background: #fff;border-radius: 3px;}
 ::-webkit-scrollbar-thumb {background: rgb(205, 206, 206);border-radius: 3px;}
