@@ -105,7 +105,7 @@ service.interceptors.response.use(
     }
   },
   (error) => {
-    console.error('Response Error:', error)
+    // console.error('Response Error:', error)
     if (axios.isCancel(error)) {
       return Promise.reject({ msg: error.message || 'Request Cancel' })
     }
@@ -117,6 +117,10 @@ service.interceptors.response.use(
         // message.error('The user information is invalid. Please login again')
         loginStore.jumpToLogin()
         return
+      }
+      if (status === 400) {
+        console.log(error.response.data)
+        message.error({ content: error.response.data.data, key: 'error' })
       }
       return Promise.reject(error.response?.data)
     } else if (error.code === 'ECONNABORTED' && error.message.indexOf('timeout') !== -1) {
@@ -170,6 +174,7 @@ const request = async (opt: IApiConfig, isThrowErr = true) => {
     return data
   } catch (err: any) {
     // handle response message
+    console.log(err, 'err')
     const { error } = err
     const { message: messageText = '' } = (error as { code?: number; message?: string }) || {}
     if (options.isHandleError) {

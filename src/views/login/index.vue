@@ -1,9 +1,14 @@
 <template>
+  <div class="login-bg2"></div>
   <div class="login-container">
     <div class="login-card">
       <h2>欢迎登录
         <!--        <span class="login-system">一张表系统</span>-->
       </h2>
+
+<!--      <div class="login-title">-->
+<!--        一张表-->
+<!--      </div>-->
 
       <input type="text" v-model="username" placeholder="请输入用户名"/>
       <input type="password" v-model="password" placeholder="请输入密码"/>
@@ -53,9 +58,19 @@ const login = async () => {
   color: rgb(42, 40, 40);
   font-weight: normal;
 }
+.login-bg2 {
+  background-image: url('@/assets/images/bg-2.jpg');
+  background-size: cover; /* 或者其他你需要的背景大小 */
+  background-position: center; /* 或者其他你需要的背景位置 */
+  position: fixed;
+  top: 50px;
+  left: 300px;
+  min-width: 1180px;
+  height: 100%;
+}
 
 .login-container {
-  background-image: url('@/assets/images/background.jpg');
+  background-image: url('@/assets/images/bg-1.jpg');
   background-size: cover; /* 或者其他你需要的背景大小 */
   background-position: center; /* 或者其他你需要的背景位置 */
   display: flex;
@@ -72,6 +87,8 @@ const login = async () => {
   width: 400px;
   min-height: 340px;
   padding: 20px 20px 40px;
+  z-index: 1;
+  margin-left: 40%;
 }
 
 h2 {
@@ -95,5 +112,13 @@ button {
   border: none;
   border-radius: 3px;
   cursor: pointer;
+}
+
+.login-title {
+  height: 50px;
+  line-height: 50px;
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
 }
 </style>

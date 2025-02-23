@@ -96,6 +96,7 @@ export const useLoginStore = defineStore(
         // }
         // sessionStorage.setItem('_menusMap', JSON.stringify(_menusMap))
         sessionStorage.setItem('_menus', JSON.stringify(menuList))
+        sessionStorage.setItem('username', res.username)
         // menus.value = menusAuthList
         // menusMap.value = _menusMap
         // userName.value = _userName
