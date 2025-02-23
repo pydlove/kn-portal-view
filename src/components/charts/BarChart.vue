@@ -36,15 +36,18 @@ const updateChart = () => {
       data: ['申请数量']
     },
     xAxis: {
-      data: props.chartData.xaxis
+      name: props.chartData.x_name,
+      data: props.chartData.xAxis
       // data: mockData.categories
     },
-    yAxis: {},
+    yAxis: {
+      name: props.chartData.y_name
+    },
     series: [
       {
         name: '申请数量',
         type: 'bar',
-        data: props.chartData.yaxis
+        data: props.chartData.yAxis
         // data: mockData.values
       }
     ]
@@ -76,5 +79,6 @@ watch(
   position: relative;
   width: 100%;
   height: 400px;
+  background-color: red;
 }
 </style>
