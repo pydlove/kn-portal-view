@@ -93,14 +93,14 @@ if (menusJson) {
 }
 
 const messageData = ref([]);
-const messageCount = ref(5);
+const messageCount = ref(0);
 const popoverVisible = ref(false);
 
 const handleMenuClick = (menuCode) => {
   selectedKeys.value = [menuCode];
   const activeMenu = menus.value.find(menu => menu.menuCode === menuCode);
   if (activeMenu) {
-    router.push({ path: activeMenu.menuUrl });
+    router.push({path: activeMenu.menuUrl});
   }
 };
 
