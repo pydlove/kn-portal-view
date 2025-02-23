@@ -8,11 +8,13 @@
     <!-- 右侧内容 -->
     <a-card class="right-card">
       <div style="width: 100%;float: left;">
-        <a-button class="change-view" type="dashed" shape="round" @click="changeView">切换表</a-button>
+        <div style="width: 100px;height: 50px;float: left;">
+          <a-button class="change-view" type="dashed" shape="round" v-if="!data.isShow" @click="changeView">切换表</a-button>
+        </div>
         <a-textarea
           v-model:value="query"
           placeholder="请输入您要查询的内容，按Enter键发送查询"
-          style="margin-left: calc(20% - 100px);width: calc(40% + 200px);white-space: pre-wrap;resize: none;float: left;"
+          style="margin-left: calc(20% - 100px);width: 60%;white-space: pre-wrap;resize: none;"
           :loading="isSearchLoading"
           :auto-size="{ minRows: 2, maxRows: 2 }"
           @keydown.enter.native="removeNewline"
@@ -132,7 +134,7 @@ const handleNewDialog = () => {
 .container{margin-top: 16px;width: 100%; height: 600px; float: left;}
 .left-card{width: 220px; height: 100%;float: left;border-color: #C5C5C5}
 .right-card{margin-left: 10px;width: calc(100% - 230px); height: 100%;float: left;border-color: #C5C5C5}
-.change-view{width:100px;height:48px;float: left;border-color: #409EFF;color: #409EFF}
+.change-view{width:100px;height:48px;border-color: #409EFF;color: #409EFF}
 .table-info{margin-top: 70px;}
 .data-info{margin-top: 70px;}
 .table-card{background-color: #f2f2f2;}
