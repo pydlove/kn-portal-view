@@ -27,6 +27,12 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
     component: () => import('@/views/table/apply/index.vue')
   },
   {
+    path: '/query',
+    name: 'query',
+    meta: { hideHeader: false },
+    component: () => import('@/views/table/query/index.vue')
+  },
+  {
     path: '/test',
     name: 'test',
     meta: { hideHeader: false },
