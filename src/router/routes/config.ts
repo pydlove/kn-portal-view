@@ -38,4 +38,10 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
     meta: { hideHeader: false },
     component: () => import('@/views/test/index.vue')
   },
+  {
+    path: '/user',
+    name: 'user',
+    meta: { hideHeader: false },
+    component: () => import('@/views/sys/user/index.vue')
+  },
 ]
