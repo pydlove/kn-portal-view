@@ -14,7 +14,7 @@
 
     <!-- 回答部分，可以滚动 -->
     <div class="scrollable-answers-container" ref="scrollContainer">
-      <div v-for="(item, index) in paginatedMessages" :key="index" class="message-container">
+      <div v-for="(item, index) in messages" :key="index" class="message-container">
         <div class="question">{{ item.question }}</div>
         <div class="answer">
           <div v-if="item.answer">{{ item.answer }}</div>
@@ -23,23 +23,13 @@
         </div>
       </div>
     </div>
-
-    <!-- 分页组件 -->
-    <div class="pagination-container">
-      <a-pagination
-          v-model:current="currentPage"
-          :total="messages.length"
-          :page-size="pageSize"
-          @change="handlePageChange"
-      />
-    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, watch, nextTick, computed } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import * as echarts from 'echarts';
-import { Input as AInput, Button as AButton, Pagination as APagination } from 'ant-design-vue';
+import { Input as AInput, Button as AButton } from 'ant-design-vue';
 
 // 输入框内容
 const inputText = ref<string>('');
@@ -59,17 +49,6 @@ const chartRefs = ref<(HTMLElement | null)[]>([]);
 // 滚动容器的引用
 const scrollContainer = ref<HTMLElement | null>(null);
 
-// 分页相关的数据
-const currentPage = ref<number>(1);
-const pageSize = ref<number>(10);
-
-// 计算分页后的数据
-const paginatedMessages = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  const end = start + pageSize.value;
-  return messages.value.slice(start, end);
-});
-
 // 设置图表容器的引用
 const setChartRef = (el: HTMLElement | null, index: number) => {
   if (el) {
@@ -84,7 +63,7 @@ const initChart = async (index: number) => {
   console.log('Initializing chart for index:', index, 'chartDom:', chartDom); // 调试信息
   if (chartDom) {
     const chart = echarts.init(chartDom);
-    const message = paginatedMessages.value[index];
+    const message = messages.value[index];
     let option;
 
     switch (message.chartType) {
@@ -211,18 +190,6 @@ const scrollToBottom = () => {
   }
 };
 
-// 处理分页变化
-const handlePageChange = (page: number) => {
-  currentPage.value = page;
-  // 重新初始化图表
-  chartRefs.value = paginatedMessages.value.map(() => null);
-  nextTick(() => {
-    paginatedMessages.value.forEach((_, index) => {
-      initChart(index);
-    });
-  });
-};
-
 // 监听 messages 的变化，确保 chartRefs 和 messages 长度一致
 watch(messages, (newMessages) => {
   chartRefs.value = newMessages.map(() => null);
@@ -230,7 +197,7 @@ watch(messages, (newMessages) => {
 
 // 页面加载时初始化图表（如果有）
 onMounted(() => {
-  paginatedMessages.value.forEach((_, index) => {
+  messages.value.forEach((_, index) => {
     initChart(index);
   });
 });
@@ -259,7 +226,7 @@ onMounted(() => {
 
 .scrollable-answers-container {
   margin-top: 100px; /* 根据 .fixed-question-container 的高度调整 */
-  height: calc(100vh - 180px); /* 根据需要调整 */
+  height: calc(100vh - 140px); /* 根据需要调整 */
   overflow-y: auto;
   padding: 20px;
 }
@@ -288,12 +255,6 @@ onMounted(() => {
 .input-container {
   display: flex;
   gap: 10px;
-  margin-top: 20px;
-}
-
-.pagination-container {
-  display: flex;
-  justify-content: center;
   margin-top: 20px;
 }
 </style>
