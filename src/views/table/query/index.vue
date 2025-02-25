@@ -3,6 +3,10 @@
     <!-- 左侧栏 -->
     <a-card class="left-card">
       <a-button type="dashed" @click="changeView" style="margin-left: 4px;width: 160px;border-color: #409EFF;color: #409EFF">新建对话</a-button>
+      <div style="margin-top: 20px"></div>
+      <a-row :gutter="[6, 6]" v-for="item in data.talkInfoList" :key="item.id">
+        <div class="talk-info" @click="question(item)">{{item.tableComment}}</div>
+      </a-row>
     </a-card>
 
     <!-- 右侧内容 -->
@@ -53,7 +57,7 @@
 
 <script lang="ts" setup>
 import {Bar} from 'vue-chartjs';
-import {ref, computed, reactive} from 'vue';
+import {ref, computed, reactive, onMounted} from 'vue';
 import {message} from 'ant-design-vue';
 import BarChart from '@/components/charts/BarChart.vue';
 import {getAllTable} from "@/api/table/table";
@@ -74,15 +78,22 @@ const CHART_TYPES = {
 //柱状图
 const barChart = ref(null);
 const barData = ref<barDataItem>(null);
-
 //折线图
 const lineChart = ref(null);
 const lineData = ref<lineDataItem>(null);
-
 const data = reactive({
-    isShow: false,
+    isShow: true,
+    talkInfoList: JSON.parse(localStorage.getItem("talkInfoList")),
+    currentTable: "",
     cardData:[]
 })
+
+
+
+
+onMounted(() => {
+  changeView();
+});
 
 const removeNewline = (event) => {
   event.preventDefault();
@@ -108,6 +119,25 @@ const preview = (item) =>{
 
 const question = (item) =>{
   data.isShow = false;
+  data.currentTable = item.tableName;
+}
+
+const saveLocal = () =>{
+  let talkInfo = {"id":new Date().getTime(),"tableName":data.currentTable,"tableComment":query.value}
+  let newTalkInfoList = new Array();
+  
+  let dataList = JSON.parse(localStorage.getItem("talkInfoList"));
+  newTalkInfoList.push(talkInfo)
+  for(let i = 0; i < dataList.length; i ++){
+    if (i > 8){
+      break;
+    }
+    if (dataList[i] != null && dataList[i] != "" && dataList[i] != "null" && dataList[i] != undefined && dataList[i] != "undefined"){
+      newTalkInfoList.push(dataList[i])
+    }
+  }
+  data.talkInfoList = newTalkInfoList
+  localStorage.setItem("talkInfoList", JSON.stringify(newTalkInfoList))
 }
 
 const handleQuery = async () => {
@@ -160,6 +190,9 @@ const handleNewDialog = () => {
 </script>
 
 <style scoped>
+.talk-info{position: relative;width: 100%;height: 32px;line-height:32px;border-radius:5px;color:#818181;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;}
+.talk-info:hover{font-weight: bold;}
+.talk-active{font-weight: bold;}
 .container{margin-top: 16px;width: 100%; height: 600px; float: left;}
 .left-card{width: 220px; height: 100%;float: left;border-color: #C5C5C5}
 .right-card{margin-left: 10px;width: calc(100% - 230px); height: 100%;float: left;border-color: #C5C5C5}
