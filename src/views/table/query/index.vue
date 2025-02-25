@@ -26,7 +26,6 @@
                 <a-button class="handle" type="dashed" shape="round" @click="preview(item)" >预览</a-button>
                 <a-button class="handle" type="dashed" shape="round" @click="question(item)" >提问</a-button>
               </div>
-
             </a-card>
           </a-col>
         </a-row>
@@ -35,13 +34,16 @@
       <!-- 查询结果展示 -->
       <div class="data-info" v-if="!data.isShow">
         <div class="results-container">
-          <h3>查询结果</h3>
-  <!--          <a-table :columns="columns" :data-source="results"/>-->
-
+          <div class="query-display">
+            <a-icon type="question-circle" style="margin-right: 8px;" />
+            {{ query }}
+          </div>
           <!-- 图表展示 -->
+<!--          <div class="chart-container">
+            <bar-chart ref="barChart" :chartData="barData"></bar-chart>
+          </div>-->
           <div class="chart-container">
-            <h3>图表展示</h3>
-            <bar-chart ref="chart" :chartData="barData"></bar-chart>
+            <LineChart ref="lineChart" :chartData="lineData"/>
           </div>
         </div>
       </div>
@@ -53,24 +55,37 @@
 import {Bar} from 'vue-chartjs';
 import {ref, computed, reactive} from 'vue';
 import {message} from 'ant-design-vue';
-import BarChart from '../../../components/charts/BarChart.vue';
+import BarChart from '@/components/charts/BarChart.vue';
 import {getAllTable} from "@/api/table/table";
 import {talkQuestion} from "@/api/table/query";
-import {barDataItem, TableVo} from "@/views/table/query/index"; // 确保导入的是正确的函数
+import {barDataItem, lineDataItem, TableVo} from "@/views/table/query/index";
+import LineChart from "@/components/charts/LineChart.vue"; // 确保导入的是正确的函数
 
 const query = ref('');
 const results = ref<barDataItem[]>([]); // 定义 results 的类型
 const chartType = ref('');
 const chartData = ref(null);
-const chart = ref(null);
+const CHART_TYPES = {
+  TABLE: "0",
+  BAR: "1",
+  PIE: "2",
+  LINE: "3"
+};
+//柱状图
+const barChart = ref(null);
 const barData = ref<barDataItem>(null);
+
+//折线图
+const lineChart = ref(null);
+const lineData = ref<lineDataItem>(null);
+
 const data = reactive({
     isShow: false,
     cardData:[]
 })
 
-const removeNewline = (event) =>{
-  event.preventDefault(); 
+const removeNewline = (event) => {
+  event.preventDefault();
 }
 
 const changeView = () =>{
@@ -93,25 +108,44 @@ const preview = (item) =>{
 
 const question = (item) =>{
   data.isShow = false;
-  console.log(item)
 }
 
 const handleQuery = async () => {
-  alert("请求查询接口")
   if (!query.value) {
     message.warning('请输入查询内容');
-    return
+    return;
   }
 
   try {
-    const res = await getAllTable({tableName: 't_disability_info', content: query.value})
-    barData.value = res.barData
-    console.log(barData.value)
-    if (chart.value) {
-      chart.value.updateChart();
+    const res = await talkQuestion({ tableName: "t_disability_info", content: query.value });
+    const chartType = res.chartType
+    console.log("chartType", chartType)
+    switch (chartType) {
+      case CHART_TYPES.TABLE:
+        break
+      case CHART_TYPES.BAR:
+        barData.value = res.barData;
+        initChart(barChart.value, 'initBarChart');
+        break
+      case CHART_TYPES.PIE:
+        break
+      case CHART_TYPES.LINE:
+        lineData.value = res.lineData;
+        console.log("line", res.lineData);
+        initChart(lineChart.value, 'initLineChart');
+        break
+      default:
+        console.warn(`未知的图表类型: ${chartType}`);
+        break
     }
   } catch (error) {
-    message.error('网络错误，请检查连接');
+    message.error('请求失败，请稍后再试')
+  }
+};
+
+const initChart = (chartInstance, methodName) => {
+  if (chartInstance && typeof chartInstance[methodName] === 'function') {
+    chartInstance[methodName]();
   }
 };
 
@@ -141,4 +175,70 @@ const handleNewDialog = () => {
 ::-webkit-scrollbar-thumb {background: rgb(205, 206, 206);border-radius: 3px;}
 ::-webkit-scrollbar-thumb:hover {background: #333;}
 ::-webkit-scrollbar-corner {background: #fff;}
+.results-container {
+  margin-top: 20px;
+  width: 80%;
+  height: 500px;
+}
+
+.chart-container {
+  margin-top: 20px;
+  width: 80%;
+}
+
+.query-display {
+  margin-top: 20px;
+  //margin-left: 20%;
+  width: 60%;
+  //background-color: #f0f2f5;
+  padding: 10px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.container {
+  margin-top: 16px;
+  width: 100%;
+  height: 500px;
+  float: left;
+}
+
+.left-card {
+  width: 220px;
+  height: 100%;
+  float: left;
+  border-color: #C5C5C5
+}
+
+.right-card {
+  margin-left: 10px;
+  width: calc(100% - 230px);
+  height: 100%;
+  float: left;
+  border-color: #C5C5C5
+}
+
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fff;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(205, 206, 206);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
+}
+
+::-webkit-scrollbar-corner {
+  background: #fff;
+}
 </style>

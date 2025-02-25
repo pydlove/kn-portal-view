@@ -1,23 +1,49 @@
 <template>
-  <Line :data="chartData" :options="chartOptions"/>
+  <div ref="lineChart" style="width: 100%; height: 400px;"></div>
 </template>
 
 <script setup>
-import { Line } from 'vue-chartjs';
-import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale } from 'chart.js';
-import { ref, defineProps } from 'vue';
-
-// 注册图表相关元素和配置
-ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale);
+import { ref, onMounted } from 'vue';
+import * as echarts from 'echarts';
 
 const props = defineProps({
-  chartData: {
-    type: Object,
-    required: true
-  },
-  chartOptions: {
-    type: Object,
-    default: () => ({})
+    chartData: {
+        type: Object,
+        required: true
+    }
+});
+const lineChart = ref(null);
+
+let myChart = ref(null);
+const initLineChart = () => {
+  // chartInstance.setOption(props.chartOptions);
+  const option = {
+    xAxis: {
+      type: 'category',
+      data: props.chartData.xAxis
+    },
+    yAxis: {
+      type: 'value'
+    },
+    series: [
+      {
+        data: props.chartData.yAxis,
+        type: 'line'
+      }
+    ]
   }
+  myChart.setOption(option)
+};
+
+onMounted(() => {
+  myChart = echarts.init(lineChart.value);
+})
+
+// 暴露 initChart 方法给父组件
+defineExpose({
+  initLineChart
 });
 </script>
+
+<style scoped>
+</style>

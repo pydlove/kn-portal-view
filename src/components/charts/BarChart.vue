@@ -1,32 +1,29 @@
 <template>
-  <div ref="chart" style="width: 100%; height: 400px;"></div>
+  <div class="chart-container">
+    <div ref="barChart" class="chart"></div>
+<!--    <button class="export-button" @click="exportData">导出数据</button>-->
+  </div>
 </template>
 
 <script setup lang="ts">
 import * as echarts from 'echarts';
-import {computed, defineComponent, onMounted, ref, watch} from 'vue';
+import { ref, onMounted } from 'vue';
 
 const props = defineProps({
   chartData: {
     type: Object,
-    required: true,
-  },
+    required: true
+  }
 });
 
-const chart = ref(null);
-let chartInstance: echarts.ECharts | null = null;
-const updateChart = () => {
-  console.log("chartData",props.chartData)
+// 定义一个颜色数组，用于动态分配颜色
+const colors = [
+  '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'
+];
 
-  if (!chartInstance) {
-    chartInstance = echarts.init(chart.value);
-  }
-
-  const mockData = {
-    categories: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-    values: [120, 200, 150, 80, 70, 110, 130]
-  };
-
+const barChart = ref(null);
+let myChart = ref(null);
+const initBarChart = () => {
   const option = {
     title: {
       text: '申请数量统计'
@@ -36,49 +33,84 @@ const updateChart = () => {
       data: ['申请数量']
     },
     xAxis: {
-      name: props.chartData.x_name,
+      name: props.chartData.xName,
       data: props.chartData.xAxis
-      // data: mockData.categories
     },
     yAxis: {
-      name: props.chartData.y_name
+      name: props.chartData.yName
     },
     series: [
       {
         name: '申请数量',
         type: 'bar',
-        data: props.chartData.yAxis
-        // data: mockData.values
+        data: props.chartData.yAxis,
+        itemStyle: {
+          color: (params: any) => {
+            return colors[params.dataIndex % colors.length];
+          }
+        }
       }
     ]
   };
-  // console.log("xAxis",props.chartData.xAxis)
-  // console.log("yAxis",props.chartData.yAxis)
-  console.log("option",option)
-  chartInstance.setOption(option);
+  myChart.setOption(option)
 };
 
 onMounted(() => {
-  updateChart();
+  myChart = echarts.init(barChart.value)
+})
+
+// 暴露 initChart 方法给父组件
+defineExpose({
+  initBarChart
 });
 
-watch(
-    () => props.chartData,
-    (newData) => {
-      if (newData) {
-        updateChart();
-      }
-    },
-    { deep: true }
-);
-
+// 导出数据的方法
+// const exportData = () => {
+//   const data = props.chartData;
+//   const csvContent = [
+//     `${data.xName},${data.yName}`,
+//     ...data.xAxis.map((x: any, index: number) => `${x},${data.yAxis[index]}`)
+//   ].join('\n');
+//
+//   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+//   const link = document.createElement('a');
+//   if (link.download !== undefined) {
+//     const url = URL.createObjectURL(blob);
+//     link.setAttribute('href', url);
+//     link.setAttribute('download', 'chart_data.csv');
+//     link.style.visibility = 'hidden';
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//   }
+// };
 </script>
 
 <style scoped>
 .chart-container {
   position: relative;
   width: 100%;
+  height: 450px; /* 增加一些高度以容纳按钮 */
+  background-color: white; /* 根据需要调整背景颜色 */
+}
+
+.chart {
+  width: 100%;
   height: 400px;
-  background-color: red;
+}
+
+.export-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.export-button:hover {
+  background-color: #45a049;
 }
 </style>
