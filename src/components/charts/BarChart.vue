@@ -26,11 +26,11 @@ let myChart = ref(null);
 const initBarChart = () => {
   const option = {
     title: {
-      text: '申请数量统计'
+      text: '数量统计'
     },
     tooltip: {},
     legend: {
-      data: ['申请数量']
+      data: ['数量']
     },
     xAxis: {
       name: props.chartData.xName,
@@ -41,7 +41,7 @@ const initBarChart = () => {
     },
     series: [
       {
-        name: '申请数量',
+        // name: '申请数量',
         type: 'bar',
         data: props.chartData.yAxis,
         itemStyle: {

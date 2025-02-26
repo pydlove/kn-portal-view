@@ -28,7 +28,7 @@
               <a-table
                 :columns="data.tableInfoHead"
                 :data-source="data.tableDetail.columnList"
-                :pagination="false" 
+                :pagination="false"
                 :scroll="{ x: 500, y: 400 }"
                 :loading="loading"
               />
@@ -39,7 +39,7 @@
               <a-table
                 :columns="data.previewDataHead"
                 :data-source="data.previewData"
-                :pagination="false" 
+                :pagination="false"
                 :scroll="{ x: 500, y: 400 }"
                 :loading="loading"
               />
@@ -99,10 +99,10 @@ const results = ref<barDataItem[]>([]); // 定义 results 的类型
 const chartType = ref('');
 const chartData = ref(null);
 const CHART_TYPES = {
-  TABLE: "0",
-  BAR: "1",
-  PIE: "2",
-  LINE: "3"
+  TABLE: "table",
+  BAR: "bar",
+  PIE: "pie",
+  LINE: "line"
 };
 //柱状图
 const barChart = ref(null);
@@ -222,7 +222,7 @@ const question = (item) =>{
 const saveLocal = () =>{
   let talkInfo = {"id":new Date().getTime(),"tableName":data.currentTableName,"tableComment":query.value}
   let newTalkInfoList = new Array();
-  
+
   let dataList = JSON.parse(localStorage.getItem("talkInfoList"));
   newTalkInfoList.push(talkInfo)
   for(let i = 0; i < dataList.length; i ++){
