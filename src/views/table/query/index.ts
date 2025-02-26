@@ -9,7 +9,14 @@ interface lineDataItem {
 interface TableVo {
    tableId:"",
    tableName:"",
-   tableComment:""
+   tableComment:"",
+   columnList:[]
 }
 
-export { barDataItem, lineDataItem, TableVo}
+interface TalkVo {
+   mode:"",
+   columnList:[],
+   dataList:[]
+}
+
+export { barDataItem, lineDataItem, TableVo, TalkVo}
