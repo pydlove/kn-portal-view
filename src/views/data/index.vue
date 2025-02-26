@@ -186,17 +186,18 @@ const handleSubmit = async (value: string) => {
   loading.value.push(true);
 
   try {
+    const res = await talkQuestion({ tableName: "t_disability_info", content: inputText.value });
+    const chartType = res.chartType
     // 使用 mock 数据进行测试
-    const mockRes = getMockResponse(value);
-    console.log('Mock Response:', mockRes); // 调试信息
-
-    const chartType = mockRes.chartType;
-    const chartData = getChartData(chartType, mockRes);
+    // const mockRes = getMockResponse(value);
+    // console.log('Mock Response:', mockRes); // 调试信息
+    // const chartType = mockRes.chartType;
+    const chartData = getChartData(chartType, res);
 
     // 添加提问和回答到消息列表
     messages.value.push({
       question: value,
-      answer: `回答：${value}`,
+      // answer: `回答：${value}`,
       chart: true,
       chartType: chartType,
       chartData: chartData
@@ -248,7 +249,7 @@ const initChart = async (index: number) => {
   const chartDom = chartRefs.value[index];
   const chartComponent = chartComponentRefs.value[index];
   const message = messages.value[index];
-  console.log('Initializing chart for index:', index, 'chartDom:', chartDom, 'chartComponent:', chartComponent); // 调试信息
+ // console.log('Initializing chart for index:', index, 'chartDom:', chartDom, 'chartComponent:', chartComponent); // 调试信息
 
   if (chartDom && chartComponent) {
     const chartData = message.chartData;
