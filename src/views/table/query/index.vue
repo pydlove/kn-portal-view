@@ -21,7 +21,7 @@
           @keydown.enter.native="removeNewline"
           @keydown.enter="handleQuery"
         />
-        <a-button style="text-align:center;line-height: 36px;margin-left: 10px;width: 80px;height: 54px;float: left;border-radius: 4px;font-weight: bold;background-color: #409EFF;color: #fff">搜索</a-button>
+        <a-button style="text-align:center;line-height: 36px;margin-left: 10px;width: 80px;height: 54px;float: left;border-radius: 4px;font-weight: bold;background-color: #409EFF;color: #fff" @click="handleQuery">搜索</a-button>
       </div>
 
 
