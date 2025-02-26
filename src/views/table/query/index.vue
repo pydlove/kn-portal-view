@@ -244,6 +244,7 @@ const handleQuery = async () => {
   }
 
   try {
+    saveLocal()
     const res = await talkQuestion({ tableName: "t_disability_info", content: query.value });
     const chartType = res.chartType
     console.log("chartType", chartType)
