@@ -5,3 +5,10 @@ export function getAllTable() {
     method: 'get'
   })
 }
+
+export function tableDetail() {
+  return request({
+    url: '/table/tableInfo',
+    method: 'get'
+  })
+}

@@ -2,7 +2,11 @@
   <div class="container">
     <!-- 左侧栏 -->
     <a-card class="left-card">
-      <a-button type="dashed" @click="changeView" style="margin-left: 4px;width: 160px;border-color: #409EFF;color: #409EFF">新建对话</a-button>
+      <a-button @click="changeView" style="margin-left: 4px;width: 160px;border-color: #409EFF;color: #409EFF">新建对话</a-button>
+      <div style="margin-top: 20px"></div>
+      <a-row :gutter="[6, 6]" v-for="item in data.talkInfoList" :key="item.id">
+        <div class="talk-info" @click="question(item)">{{item.tableComment}}</div>
+      </a-row>
     </a-card>
 
     <!-- 右侧内容 -->
@@ -10,12 +14,41 @@
       <a-textarea
         v-model:value="query"
         placeholder="请输入您要查询的内容，按Enter键发送查询"
-        style="margin-left: calc(20% - 100px);width: 60%;white-space: pre-wrap;resize: none;"
+        style="width: 100%;white-space: pre-wrap;resize: none;"
         :loading="isSearchLoading"
         :auto-size="{ minRows: 2, maxRows: 2 }"
         @keydown.enter.native="removeNewline"
         @keydown.enter="handleQuery"
       />
+
+      <a-drawer :title="data.currentTableDesc" placement="right" :closable="false" v-model:visible="data.previewVisible" width="45%">
+        <a-tabs v-model:activeKey="data.activeKey">
+          <a-tab-pane key="1" tab="字段详情">
+            <a-spin :spinning="data.tableInfoHeadLoading">
+              <a-table
+                :columns="data.tableInfoHead"
+                :data-source="data.tableDetail.columnList"
+                :pagination="false" 
+                :scroll="{ x: 500, y: 400 }"
+                :loading="loading"
+              />
+            </a-spin>
+          </a-tab-pane>
+          <a-tab-pane key="2" tab="数据预览" :click="getPreviewData(data.tableDetail)">
+            <a-spin :spinning="data.previewDataLoading">
+              <a-table
+                :columns="data.previewDataHead"
+                :data-source="data.previewData"
+                :pagination="false" 
+                :scroll="{ x: 500, y: 400 }"
+                :loading="loading"
+              />
+            </a-spin>
+          </a-tab-pane>
+        </a-tabs>
+
+
+      </a-drawer>
 
       <div class="table-info" v-if="data.isShow">
         <a-row :gutter="[16, 16]">
@@ -53,10 +86,10 @@
 
 <script lang="ts" setup>
 import {Bar} from 'vue-chartjs';
-import {ref, computed, reactive} from 'vue';
+import {ref, computed, reactive, onMounted} from 'vue';
 import {message} from 'ant-design-vue';
 import BarChart from '@/components/charts/BarChart.vue';
-import {getAllTable} from "@/api/table/table";
+import {getAllTable,tableDetail} from "@/api/table/table";
 import {talkQuestion} from "@/api/table/query";
 import {barDataItem, lineDataItem, TableVo} from "@/views/table/query/index";
 import LineChart from "@/components/charts/LineChart.vue"; // 确保导入的是正确的函数
@@ -74,15 +107,31 @@ const CHART_TYPES = {
 //柱状图
 const barChart = ref(null);
 const barData = ref<barDataItem>(null);
-
 //折线图
 const lineChart = ref(null);
 const lineData = ref<lineDataItem>(null);
-
 const data = reactive({
-    isShow: false,
+    isShow: true,
+    previewVisible: false,
+    talkInfoList: JSON.parse(localStorage.getItem("talkInfoList")),
+    tableInfoHeadLoading: false,
+    previewDataLoading: false,
+    currentTableName: "",
+    currentTableDesc: "",
+    tableDetail:[],
+    activeKey: '1',
+    tableInfoHead:[{title: '字段名称',dataIndex: 'columnName',width: 200},{title: '字段说明',dataIndex: 'columnDesc',width: 300}],
+    previewDataHead:[],
+    previewData:[],
     cardData:[]
 })
+
+
+
+
+onMounted(() => {
+  changeView();
+});
 
 const removeNewline = (event) => {
   event.preventDefault();
@@ -101,13 +150,91 @@ const queryTableInfo = async () => {
   } catch (e) {}
 }
 
+const queryTableDetail = async () => {
+  try {
+    data.tableInfoHeadLoading = true;
+    const res: { rows: TableVo[];} = await tableDetail()
+    data.tableDetail = res;
+    data.tableInfoHeadLoading = false;
+  } catch (e) {}
+}
+
+const getPreviewData = async (obj) =>{
+  if (data.activeKey == '2'){
+    if ((data.previewData && data.previewData.length > 0) && data.currentTableName == obj.tableName){
+      return;
+    }
+    data.previewDataLoading = true;
+    try {
+      const res: { rows: TalkVo[];} = await talkQuestion({ tableName: obj.tableName, content: "查询所有数据" });
+      let colums = new Array()
+      let resultColumns = res.columnList
+      console.log(res)
+      if (!resultColumns || resultColumns.length == 0){
+        data.previewDataHead = [];
+        data.previewDataLoading = false
+        return;
+      }
+      for(let i = 0; i < resultColumns.length; i ++){
+          colums.push({title:resultColumns[i].columnDesc,dataIndex:resultColumns[i].columnName,width: 200})
+      }
+      data.previewDataHead = colums
+
+
+      if (!res.dataList || res.dataList.length == 0){
+        data.previewData = [];
+        data.previewDataLoading = false
+        return;
+      }
+      let columnInfo = new Array()
+      for(let i = 0; i < res.dataList.length; i ++){
+        let jsonStr = "{";
+        for(let j = 0; j < resultColumns.length; j ++){
+          if (j < resultColumns.length - 1){
+            jsonStr = jsonStr + "\"" + resultColumns[j].columnName + "\":\"" + res.dataList[i][j] + "\","
+          } else {
+            jsonStr = jsonStr + "\""  + resultColumns[j].columnName + "\":\"" + res.dataList[i][j] + "\"}"
+          }
+        }
+        columnInfo.push(JSON.parse(jsonStr))
+      }
+      data.previewData = columnInfo
+      data.previewDataLoading = false
+    } catch (error) {
+      data.previewDataLoading = false
+      message.error(error)
+    }
+  }
+}
+
 const preview = (item) =>{
-  data.isShow = false;
-  console.log(item)
+  data.currentTableName = item.tableName
+  data.currentTableDesc = item.tableComment
+  data.previewVisible = true
+  queryTableDetail()
 }
 
 const question = (item) =>{
   data.isShow = false;
+  data.currentTableName = item.tableName;
+}
+
+const saveLocal = () =>{
+  let talkInfo = {"id":new Date().getTime(),"tableName":data.currentTableName,"tableComment":query.value}
+  let newTalkInfoList = new Array();
+  
+  let dataList = JSON.parse(localStorage.getItem("talkInfoList"));
+  newTalkInfoList.push(talkInfo)
+  for(let i = 0; i < dataList.length; i ++){
+    if (i > 8){
+      break;
+    }
+    if (dataList[i] != null && dataList[i] != "" && dataList[i] != "null" && dataList[i] != undefined && dataList[i] != "undefined"){
+      newTalkInfoList.push(dataList[i])
+    }
+  }
+  data.talkInfoList = newTalkInfoList
+  localStorage.setItem("talkInfoList", JSON.stringify(newTalkInfoList))
 }
 
 const handleQuery = async () => {
@@ -117,6 +244,7 @@ const handleQuery = async () => {
   }
 
   try {
+    saveLocal()
     const res = await talkQuestion({ tableName: "t_disability_info", content: query.value });
     const chartType = res.chartType
     console.log("chartType", chartType)
@@ -141,7 +269,7 @@ const handleQuery = async () => {
   } catch (error) {
     message.error('请求失败，请稍后再试')
   }
-};
+}
 
 const initChart = (chartInstance, methodName) => {
   if (chartInstance && typeof chartInstance[methodName] === 'function') {
@@ -160,6 +288,9 @@ const handleNewDialog = () => {
 </script>
 
 <style scoped>
+.talk-info{position: relative;width: 100%;height: 32px;line-height:32px;border-radius:5px;color:#818181;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;}
+.talk-info:hover{font-weight: bold;}
+.talk-active{font-weight: bold;}
 .container{margin-top: 16px;width: 100%; height: 600px; float: left;}
 .left-card{width: 220px; height: 100%;float: left;border-color: #C5C5C5}
 .right-card{margin-left: 10px;width: calc(100% - 230px); height: 100%;float: left;border-color: #C5C5C5}
@@ -170,6 +301,7 @@ const handleNewDialog = () => {
 .table-desc{margin-top: -10px;}
 .table-handle{margin-top: 20px;float: right};
 ::v-deep .ant-card .ant-card-body{background-color: #C5C5C5;}
+
 ::-webkit-scrollbar {width: 3px;height: 3px;}
 ::-webkit-scrollbar-track {background: #fff;border-radius: 3px;}
 ::-webkit-scrollbar-thumb {background: rgb(205, 206, 206);border-radius: 3px;}
