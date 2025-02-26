@@ -184,7 +184,6 @@ const getPreviewData = async (obj) =>{
       const res: { rows: TalkVo[];} = await talkQuestion({ tableName: obj.tableName, content: "查询所有数据" });
       let colums = new Array()
       let resultColumns = res.columnList
-      console.log(res)
       if (!resultColumns || resultColumns.length == 0){
         data.previewDataHead = [];
         data.previewDataLoading = false
@@ -201,19 +200,7 @@ const getPreviewData = async (obj) =>{
         data.previewDataLoading = false
         return;
       }
-      let columnInfo = new Array()
-      for(let i = 0; i < res.dataList.length; i ++){
-        let jsonStr = "{";
-        for(let j = 0; j < resultColumns.length; j ++){
-          if (j < resultColumns.length - 1){
-            jsonStr = jsonStr + "\"" + resultColumns[j].columnName + "\":\"" + res.dataList[i][j] + "\","
-          } else {
-            jsonStr = jsonStr + "\""  + resultColumns[j].columnName + "\":\"" + res.dataList[i][j] + "\"}"
-          }
-        }
-        columnInfo.push(JSON.parse(jsonStr))
-      }
-      data.previewData = columnInfo
+      data.previewData = res.dataList
       data.previewDataLoading = false
     } catch (error) {
       data.previewDataLoading = false
