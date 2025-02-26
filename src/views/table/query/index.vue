@@ -11,15 +11,19 @@
 
     <!-- 右侧内容 -->
     <a-card class="right-card">
-      <a-textarea
-        v-model:value="query"
-        placeholder="请输入您要查询的内容，按Enter键发送查询"
-        style="width: 100%;white-space: pre-wrap;resize: none;"
-        :loading="isSearchLoading"
-        :auto-size="{ minRows: 2, maxRows: 2 }"
-        @keydown.enter.native="removeNewline"
-        @keydown.enter="handleQuery"
-      />
+      <div style="width: 100%;float: left">
+        <a-textarea
+          v-model:value="query"
+          placeholder="请输入您要查询的内容，按Enter键发送查询"
+          style="width: calc(100% - 120px);white-space: pre-wrap;resize: none;float: left;border-color: #409EFF;"
+          :loading="isSearchLoading"
+          :auto-size="{ minRows: 2, maxRows: 2 }"
+          @keydown.enter.native="removeNewline"
+          @keydown.enter="handleQuery"
+        />
+        <a-button style="text-align:center;line-height: 36px;margin-left: 10px;width: 80px;height: 54px;float: left;border-radius: 4px;font-weight: bold;background-color: #409EFF;color: #fff" @click="handleQuery">搜索</a-button>
+      </div>
+
 
       <a-drawer :title="data.currentTableDesc" placement="right" :closable="false" v-model:visible="data.previewVisible" width="45%">
         <a-tabs v-model:activeKey="data.activeKey">
@@ -52,6 +56,17 @@
 
       <div class="table-info" v-if="data.isShow">
         <a-row :gutter="[16, 16]">
+          <a-col :span="7" v-for="item in data.cardData" :key="item.tableId" style="height: 54px; background-color: #f4f4f4;margin-left: 16px;margin-top: 20px;border-radius: 6px;">
+            <div style="font-weight: bold;color:#585858;width: 192px;line-height: 52px;float: left;">{{ item.tableComment }}</div>
+            <div style="float: left;margin-top: 11px;margin-left: 20px">
+              <a-button class="handle" type="dashed" shape="round" @click="preview(item)" >预览</a-button>
+              <a-button class="handle" style="color: #409EFF" type="dashed" shape="round" @click="question(item)" >提问</a-button>
+            </div>
+          </a-col>
+        </a-row>
+
+
+<!--         <a-row :gutter="[16, 16]">
           <a-col :span="6" v-for="item in data.cardData" :key="item.tableId">
             <a-card class="table-card" :title="item.tableName">
               <div class="table-desc">{{ item.tableComment }}</div>
@@ -61,7 +76,7 @@
               </div>
             </a-card>
           </a-col>
-        </a-row>
+        </a-row> -->
       </div>
 
       <!-- 查询结果展示 -->
@@ -292,11 +307,15 @@ const handleNewDialog = () => {
 .talk-info:hover{font-weight: bold;}
 .talk-active{font-weight: bold;}
 .container{margin-top: 16px;width: 100%; height: 600px; float: left;}
+/*.left-card{width: 220px; height: 100%;float: left;border-color: #C5C5C5}
+.right-card{margin-left: 10px;width: calc(100% - 230px); height: 100%;float: left;border-color: #C5C5C5}
+.table-card{background-color: #f2f2f2;}*/
+
 .left-card{width: 220px; height: 100%;float: left;border-color: #C5C5C5}
 .right-card{margin-left: 10px;width: calc(100% - 230px); height: 100%;float: left;border-color: #C5C5C5}
 .table-info{margin-top: 70px;}
 .data-info{margin-top: 70px;}
-.table-card{background-color: #f2f2f2;}
+
 ::v-deep .ant-card-head{background-color: #D3C4E1;}
 .table-desc{margin-top: -10px;}
 .table-handle{margin-top: 20px;float: right};
