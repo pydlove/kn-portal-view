@@ -25,7 +25,7 @@ import { useRouter } from 'vue-router'
 import { useLoginStore } from '@/store/modules/login'
 
 const username = ref('admin');
-const password = ref('123456');
+const password = ref('12345678');
 const router = useRouter()
 const loginStore = useLoginStore()
 
@@ -58,19 +58,21 @@ const login = async () => {
   color: rgb(42, 40, 40);
   font-weight: normal;
 }
+/*
 .login-bg2 {
   background-image: url('@/assets/images/bg-2.jpg');
-  background-size: cover; /* 或者其他你需要的背景大小 */
-  background-position: center; /* 或者其他你需要的背景位置 */
+  background-size: cover;
+  background-position: center;
   position: fixed;
   top: 50px;
   left: 300px;
   min-width: 1180px;
   height: 100%;
 }
+*/
 
 .login-container {
-  background-image: url('@/assets/images/bg-1.jpg');
+  background-image: url('@/assets/images/bg-3.png');
   background-size: cover; /* 或者其他你需要的背景大小 */
   background-position: center; /* 或者其他你需要的背景位置 */
   display: flex;

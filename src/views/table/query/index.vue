@@ -11,13 +11,13 @@
 
     <!-- 右侧内容 -->
     <a-card class="right-card">
-      <div style="width: 100%;float: left">
+      <div style="width: 100%;float: left;">
         <a-textarea
           v-model:value="query"
           placeholder="请输入您要查询的内容，按Enter键发送查询"
-          style="width: calc(100% - 120px);white-space: pre-wrap;resize: none;float: left;border-color: #409EFF;"
+          style="width: calc(100% - 120px);white-space: pre-wrap;resize: none;float: left;border-color: #409EFF;line-height: 44px;"
           :loading="isSearchLoading"
-          :auto-size="{ minRows: 2, maxRows: 2 }"
+          :auto-size="{ minRows: 1, maxRows: 1}"
           @keydown.enter.native="removeNewline"
           @keydown.enter="handleQuery"
         />
@@ -60,7 +60,7 @@
             <div style="font-weight: bold;color:#585858;width: 192px;line-height: 52px;float: left;">{{ item.tableComment }}</div>
             <div style="float: left;margin-top: 11px;margin-left: 20px">
               <a-button class="handle" type="dashed" shape="round" @click="preview(item)" >预览</a-button>
-              <a-button class="handle" style="color: #409EFF" type="dashed" shape="round" @click="question(item)" >提问</a-button>
+              <a-button class="handle" style="color: #409EFF" type="dashed" shape="round" @click="checkAccessAuthRequest(item)" >提问</a-button>
             </div>
           </a-col>
         </a-row>
@@ -96,6 +96,9 @@
         </div>
       </div>
     </a-card>
+
+    <!-- 引入 Apply 组件 -->
+    <apply-modal ref="applyModal"></apply-modal>
   </div>
 </template>
 
@@ -107,7 +110,9 @@ import BarChart from '@/components/charts/BarChart.vue';
 import {getAllTable,tableDetail} from "@/api/table/table";
 import {talkQuestion} from "@/api/table/query";
 import {barDataItem, lineDataItem, TableVo} from "@/views/table/query/index";
-import LineChart from "@/components/charts/LineChart.vue"; // 确保导入的是正确的函数
+import LineChart from "@/components/charts/LineChart.vue";
+import ApplyModal from "@/components/Apply.vue";
+import {checkAccessAuth} from "@/api/table/dataAuth"; // 确保导入的是正确的函数
 
 const query = ref('');
 const results = ref<barDataItem[]>([]); // 定义 results 的类型
@@ -220,6 +225,33 @@ const question = (item) =>{
   data.isShow = false;
   data.currentTableName = item.tableName;
 }
+
+const checkAccessAuthRequest = async (item) => {
+  try {
+    console.log(item)
+    let hasAccess = await checkAccessAuth({tableId: item.tableId});
+    if (hasAccess === 1) {
+      question(item);
+    } else {
+      if (hasAccess === 0) {
+        message.error('您没有权限访问该表, 请申请访问！');
+        openApplyModal(item);
+      } else {
+        message.error('您已经申请该表的访问权限，目前正在审批中，请耐心等待！');
+      }
+    }
+  } catch (error) {
+    console.error('检查权限失败:', error);
+    message.error('检查权限失败，请稍后再试');
+  }
+};
+
+const applyModal = ref(null);
+const openApplyModal = (item) => {
+  if (applyModal.value) {
+    applyModal.value.openModal(item);
+  }
+};
 
 const saveLocal = () =>{
   let talkInfo = {"id":new Date().getTime(),"tableName":data.currentTableName,"tableComment":query.value}

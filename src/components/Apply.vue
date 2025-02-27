@@ -40,19 +40,8 @@ import { ref, onMounted } from 'vue';
 import { message } from 'ant-design-vue'; // 导入 message 组件
 import { onSubmitApply } from '@/api/table/apply';
 
-const props = defineProps({
-  dataTableName: {
-    type: String,
-    required: true,
-  },
-  dataTableId: {
-    type: String,
-    required: true,
-  },
-});
-
-const dataTableName = props.dataTableName
-const dataTableId = props.dataTableId
+const dataTableName = ref("")
+const dataTableId =  ref("")
 
 const applyUser = ref('');
 const applyReason = ref('');
@@ -69,8 +58,10 @@ const applyNo = ref(generateApplyNo());
 const isModalVisible = ref(false);
 const modalTitle = ref('权限申请');
 
-const openModal = () => {
+const openModal = (item) => {
   isModalVisible.value = true;
+  dataTableName.value=item.tableComment
+  dataTableId.value=item.tableId
 };
 
 const handleSubmit = async () => {
@@ -83,7 +74,7 @@ const handleSubmit = async () => {
   try {
     const response = await onSubmitApply({
       username: applyUser.value,
-      tableId: props.dataTableId,
+      tableId: dataTableId.value,
       applyReason: applyReason.value,
       purpose: purpose.value,
       applyNo: applyNo.value,
