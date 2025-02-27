@@ -25,7 +25,7 @@
       </div>
 
 
-      <a-drawer :title="data.currentTableDesc" placement="right" :closable="false" v-model:visible="data.previewVisible" width="45%">
+      <a-drawer :title="data.currentTableDesc" placement="right" @close="onClosePreview" :closable="false" v-model:visible="data.previewVisible" width="45%" >
         <a-tabs v-model:activeKey="data.activeKey">
           <a-tab-pane key="1" tab="字段详情">
             <a-spin :spinning="data.tableInfoHeadLoading">
@@ -108,7 +108,7 @@ import {ref, computed, reactive, onMounted} from 'vue';
 import {message} from 'ant-design-vue';
 import BarChart from '@/components/charts/BarChart.vue';
 import {getAllTable,tableDetail} from "@/api/table/table";
-import {talkQuestion} from "@/api/table/query";
+import {talkQuestion,queryPreviewData} from "@/api/table/query";
 import {barDataItem, lineDataItem, TableVo} from "@/views/table/query/index";
 import LineChart from "@/components/charts/LineChart.vue";
 import ApplyModal from "@/components/Apply.vue";
@@ -162,6 +162,11 @@ const changeView = () =>{
   queryTableInfo()
 }
 
+const onClosePreview = () =>{
+  data.previewVisible = false
+  data.activeKey = '1'
+}
+
 const queryTableInfo = async () => {
   try {
     const res: { rows: TableVo[];} = await getAllTable()
@@ -186,7 +191,7 @@ const getPreviewData = async (obj) =>{
     }
     data.previewDataLoading = true;
     try {
-      const res: { rows: TalkVo[];} = await talkQuestion({ tableName: obj.tableName, content: "查询所有数据" });
+      const res: { rows: TalkVo[];} = await queryPreviewData({ tableName: obj.tableName, content: "查询所有数据" });
       let colums = new Array()
       let resultColumns = res.columnList
       if (!resultColumns || resultColumns.length == 0){

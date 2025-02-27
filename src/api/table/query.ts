@@ -6,3 +6,11 @@ export function talkQuestion(data: any) {
     method: 'post'
   })
 }
+
+export function queryPreviewData(data: any) {
+  return request({
+    url: '/talk/preview',
+    data,
+    method: 'post'
+  })
+}
