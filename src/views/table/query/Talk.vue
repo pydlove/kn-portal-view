@@ -77,12 +77,20 @@ function resumTalk(historyTalk){
       return;
     }
     data.talkId = historyTalk.talkId
-    messages.value = historyTalk.dataList
+    // messages.value = historyTalk.dataList
+    messages.value = new Array()
+    let historyList = historyTalk.dataList
+    if (historyList == null || historyList == undefined || historyList.length == 0){
+      return;
+    }
     nextTick(() => {
       data.loading = true;
-      messageEmpty()
-      initChart(messages.value.length - 1);
-      scrollToBottom();
+      data.isMessageEmpty = false
+      for (let i = 0; i < historyList.length; i ++){
+        messages.value.push(historyList[i]);
+        initChart(messages.value.length - 1);
+        scrollToBottom();
+      }
       data.loading = false;
     });
   }
@@ -293,7 +301,6 @@ const initChart = async (index: number) => {
   const chartComponent = chartComponentRefs.value[index];
   const message = messages.value[index];
  // console.log('Initializing chart for index:', index, 'chartDom:', chartDom, 'chartComponent:', chartComponent); // 调试信息
-
   if (chartDom && chartComponent) {
     const chartData = message.chartData;
     if (chartComponent.initBarChart) {
@@ -458,6 +465,7 @@ const getMockResponse = (value: string) => {
 
 .table-name {
   font-weight: bold;
+  font-size: 17px;
 }
 
 .switch-button {
