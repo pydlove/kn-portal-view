@@ -40,9 +40,14 @@ onMounted(() => {
 
 provide('changeView', changeView);
 provide('updateTalkInfoList', updateTalkInfoList);
+provide('handleActive', handleActive);
 const talkRef = ref(null);
 
 function newTalk(){
+  let removeDom = document.getElementById(String(data.hostoryTalkId));
+  if (removeDom) {
+    removeDom.classList.remove('talk-active');
+  }
   changeView(true,{"tableName":"","tableComment":""})
 }
 
@@ -56,18 +61,23 @@ function updateTalkInfoList(){
   data.talkInfoList = JSON.parse(localStorage.getItem("talkInfoList"))
 }
 
-const resumTalk = (item) =>{
-  if (data.hostoryTalkId != item.talkId){
+function handleActive(talkId){
+  console.log(data.hostoryTalkId + "====" + talkId)
+  if (data.hostoryTalkId != talkId){
     let removeDom = document.getElementById(String(data.hostoryTalkId));
-    let addDom = document.getElementById(String(item.talkId));
+    let addDom = document.getElementById(String(talkId));
     if (removeDom) {
       removeDom.classList.remove('talk-active');
     }
     if (addDom) {
       addDom.classList.add('talk-active');
-      data.hostoryTalkId = item.talkId
+      data.hostoryTalkId = talkId
     }
   }
+}
+
+const resumTalk = (item) =>{
+  handleActive(item.talkId)
   data.currentTableName = item.tableName
   data.currentTableDesc = item.tableDesc
   data.isShow = false;

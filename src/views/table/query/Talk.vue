@@ -60,6 +60,7 @@ import { talkQuestion } from "@/api/table/query";
 
 const messages = ref<Message[]>([]);
 const updateTalkInfoList = inject('updateTalkInfoList');
+const handleActive = inject('handleActive');
 const props = defineProps({
   tableInfo: String
 });
@@ -180,6 +181,9 @@ const saveLocal = () =>{
   data.talkInfoList = newTalkInfoList
   localStorage.setItem("talkInfoList", JSON.stringify(newTalkInfoList))
   updateTalkInfoList()
+  nextTick(() => {
+    handleActive(data.talkId);
+  });
 }
 
 
