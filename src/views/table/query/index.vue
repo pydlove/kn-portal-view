@@ -62,7 +62,6 @@ function updateTalkInfoList(){
 }
 
 function handleActive(talkId){
-  console.log(data.hostoryTalkId + "====" + talkId)
   if (data.hostoryTalkId != talkId){
     let removeDom = document.getElementById(String(data.hostoryTalkId));
     let addDom = document.getElementById(String(talkId));
