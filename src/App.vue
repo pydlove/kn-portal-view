@@ -36,8 +36,6 @@ onMounted(() => {
   height: 100%;
   max-height: 100%;
   width: 100%;
-  padding-left: 10%;
-  padding-right: 10%;
   margin: 0 auto;
   background: #f8f9fa;
 }

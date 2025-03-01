@@ -167,13 +167,13 @@ onMounted(() => {
   align-items: center;
   color: #333;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  height: 70px;
+  height: 50px;
 }
 
 .main-menu {
   background-color: #ffffff;
-  height: 70px !important;
-  line-height: 70px !important;
+  height: 50px !important;
+  line-height: 50px !important;
 }
 
 .logo {
