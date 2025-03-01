@@ -50,25 +50,30 @@ const formState = reactive<UserAddDataItem>({
   tableIds: []
 });
 
-const props = defineProps({
-  propRoles: {
-    type: Array,
-    required: true,
-  },
-  propTables: {
-    type: Array,
-    required: true,
-  },
-});
+// const props = defineProps({
+//   propRoles: {
+//     type: Array,
+//     required: true,
+//   },
+//   propTables: {
+//     type: Array,
+//     required: true,
+//   },
+// });
 
-const roles = props.propRoles
-const tables = props.propTables
+// const roles = props.propRoles
+// const tables = props.propTables
+
+const roles = ref([]);
+const tables = ref([]);
 
 const labelCol = { span: 6 };
 const wrapperCol = { span: 18 };
 
-const openModal = () => {
+const openModal = (rolesValue, tableValue) => {
   visible.value = true;
+  roles.value = rolesValue;
+  tables.value = tableValue;
 };
 
 const handleSubmit = async () => {

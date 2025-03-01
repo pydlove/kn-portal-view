@@ -14,6 +14,7 @@ interface UserDataItem {
   tableNames: string;
   createTime: string;
   updateTime: string;
+  tableIds: number[];
 }
 
 const UserColumns = [

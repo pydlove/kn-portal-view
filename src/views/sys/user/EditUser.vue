@@ -59,18 +59,21 @@ const formState = reactive<UserDataItem>({
 
 const props = defineProps<{
   user: UserDataItem | null;
-  propRoles: {
-    type: Array,
-    required: true,
-  },
-  propTables: {
-    type: Array,
-    required: true,
-  },
+  // propRoles: {
+  //   type: Array,
+  //   required: true,
+  // },
+  // propTables: {
+  //   type: Array,
+  //   required: true,
+  // },
 }>();
+//
+// const roles = props.propRoles
+// const tables = props.propTables
 
-const roles = props.propRoles
-const tables = props.propTables
+const roles = ref([]);
+const tables = ref([]);
 
 const labelCol = { span: 6 };
 const wrapperCol = { span: 18 };
@@ -87,8 +90,11 @@ watch(
   { immediate: true }
 );
 
-const openModal = () => {
+const openModal = (rolesValue, tableValue, tableIds) => {
   visible.value = true;
+  roles.value = rolesValue;
+  tables.value = tableValue;
+  formState.tableIds = tableIds;
 };
 
 const handleSubmit = async () => {

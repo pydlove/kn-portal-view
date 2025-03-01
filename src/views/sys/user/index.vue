@@ -112,7 +112,7 @@ const addUserModal = ref(null);
 
 const openAddUserModal = () => {
   if (addUserModal.value) {
-    addUserModal.value.openModal();
+    addUserModal.value.openModal(roles.value, tables.value);
   }
 };
 
@@ -132,7 +132,7 @@ const editingUser = ref<UserDataItem | null>(null);
 const openEditUserModal = (user: UserDataItem) => {
   editingUser.value = user;
   if (editUserModal.value) {
-    editUserModal.value.openModal();
+    editUserModal.value.openModal(roles.value, tables.value, user.tableIds);
   }
 };
 
