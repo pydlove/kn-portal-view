@@ -3,7 +3,7 @@
     <div class="table-info">
       <a-spin style="margin-top: 200px" :spinning="data.loading">
         <a-row :gutter="[16, 16]">
-          <a-col :span="7" v-for="item in data.cardData" :key="item.tableId" style="height: 54px; background-color: #f4f4f4;margin-left: 16px;margin-top: 20px;border-radius: 6px;">
+          <a-col :span="7" v-for="item in data.cardData" :key="item.id" style="height: 54px; background-color: #f4f4f4;margin-left: 16px;margin-top: 20px;border-radius: 6px;">
             <div style="font-weight: bold;color:#585858;width: 192px;line-height: 52px;float: left;">{{ item.tableComment }}</div>
             <div style="float: left;margin-top: 11px;margin-left: 20px">
               <a-button class="handle" type="dashed" shape="round" @click="preview(item)" >预览</a-button>
@@ -59,6 +59,7 @@ const data = reactive({
     loading: false,
     tableInfo: [],
     tableDetail:[],
+    lastTableDetail:[],
     activeKey: '1',
     tableInfoHead:[{title: '字段名称',dataIndex: 'columnName',width: 200},{title: '字段说明',dataIndex: 'columnDesc',width: 300}],
     tableWidth: 5000,
@@ -112,6 +113,7 @@ const queryTableDetail = async () => {
   try {
     data.loading = true;
     const res: { rows: TableVo[];} = await tableDetail({tableName: data.tableInfo.tableName})
+    data.lastTableDetail = data.tableDetai;
     data.tableDetail = res;
   } catch (e) {
     data.loading = false;
@@ -123,13 +125,13 @@ const queryTableDetail = async () => {
 
 watch(() => data.activeKey, (newVal) => {
   if (newVal == '2') {
-    getPreviewData(data.tableDetail);
+    getPreviewData(data.lastTableDetail);
   }
 });
 
 const getPreviewData = async (obj) =>{
   if (data.activeKey == '2'){
-    if (data.previewData && data.previewData.length > 0 && data.tableInfo.tableName == obj.tableName){
+    if (data.previewData && data.previewData.length > 0 && obj && data.tableInfo.tableName == obj.tableName){
       return;
     }
     data.loading = true;
