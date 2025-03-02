@@ -117,7 +117,7 @@ const getPreviewData = async (obj) =>{
       let resultColumns = res.columnList
       if (!resultColumns || resultColumns.length == 0){
         data.previewDataHead = [];
-        ata.loading = false
+        data.loading = false
         return;
       }
       for(let i = 0; i < resultColumns.length; i ++){
