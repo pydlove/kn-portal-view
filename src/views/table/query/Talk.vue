@@ -163,6 +163,9 @@ const saveLocal = () =>{
   let newTalkInfoList = new Array();
 
   let dataList = JSON.parse(localStorage.getItem("talkInfoList"));
+  if (dataList == null || dataList == undefined){
+    dataList = new Array()
+  }
   newTalkInfoList.push(talkInfo)
   for(let i = 0; i < dataList.length; i ++){
     if (i > 8){
