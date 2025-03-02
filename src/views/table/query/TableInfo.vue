@@ -23,6 +23,8 @@
               :data-source="data.tableDetail.columnList"
               :pagination="false"
               :scroll="{ x: 500, y: 400 }"
+              :customRow="() =>({style:{height:'8px',lineHeight:'8px'}})"
+              :customHeaderRow="()=>({style:{height:'12px',lineHeight:'12px'}})"
             />
           </a-spin>
         </a-tab-pane>
@@ -33,6 +35,8 @@
               :data-source="data.previewData"
               :pagination="false"
               :scroll="{ x: data.tableWidth, y: 400 }"
+              :customRow="() =>({style:{height:'8px',lineHeight:'8px'}})"
+              :customHeaderRow="()=>({style:{height:'12px',lineHeight:'12px'}})"
             />
           </a-spin>
         </a-tab-pane>

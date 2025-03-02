@@ -5,6 +5,8 @@
       :data-source="data.tableData"
       :pagination="pagination"
       :scroll="{ x: data.tableWidth, y: data.tableHeight}"
+      :customRow="()=>({style:{height:'8px',lineHeight:'8px'}})"
+      :customHeaderRow="()=>({style:{height:'12px',lineHeight:'12px'}})"
     >
       <template #name="{ text }">{{ text.first }} {{ text.last }}</template>
     </a-table>
