@@ -26,7 +26,7 @@
             />
           </a-spin>
         </a-tab-pane>
-        <a-tab-pane key="2" tab="数据预览" :click="getPreviewData(data.tableDetail)">
+        <a-tab-pane key="2" tab="数据预览" >
           <a-spin :spinning="data.loading">
             <a-table
               :columns="data.previewDataHead"
@@ -45,7 +45,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed, reactive, onMounted, inject } from 'vue';
+import {ref, computed, reactive, onMounted, inject, watch} from 'vue';
 import {message} from 'ant-design-vue';
 import {getAllTable,tableDetail} from "@/api/table/table";
 import {talkQuestion,queryPreviewData} from "@/api/table/query";
@@ -104,6 +104,12 @@ const queryTableDetail = async () => {
   data.loading = false;
 }
 
+
+watch(() => data.activeKey, (newVal) => {
+  if (newVal === '2') {
+    getPreviewData(data.tableInfo);
+  }
+});
 
 const getPreviewData = async (obj) =>{
   if (data.activeKey == '2'){
