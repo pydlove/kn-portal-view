@@ -2,8 +2,9 @@
   <div class="container" :style="data.containerStyle">
     <!-- 左侧栏 -->
     <a-card class="left-card">
-      <a-button @click="newTalk" style="margin-left: 4px;width: 160px;border-color: #409EFF;color: #409EFF">新建对话</a-button>
-      <div style="margin-top: 20px"></div>
+      <a-button @click="newTalk" v-if="!data.isShow" style="margin-left: 4px;width: 160px;border-color: #409EFF;color: #409EFF">新建对话</a-button>
+      <div v-if="data.isShow" style="text-align: center;width: 160px;padding-bottom:12px;font-weight: bold;font-size: 16px;color: #818181;border-bottom: solid 1px #999999">历史对话</div>
+      <div style="margin-top: 20px;"></div>
       <a-row :gutter="[6, 6]" v-for="item in data.talkInfoList" :key="item.talkId">
         <div class="talk-info" :id="item.talkId" @click="resumTalk(item)">{{item.content}}</div>
       </a-row>
