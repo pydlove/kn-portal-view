@@ -6,9 +6,10 @@ export function getAllTable() {
   })
 }
 
-export function tableDetail() {
+export function tableDetail(data: any) {
   return request({
     url: '/table/tableInfo',
+    data,
     method: 'get'
   })
 }

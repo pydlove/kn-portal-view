@@ -1,40 +1,80 @@
 <template>
-  <a-table :columns="columns" :data-source="tableData" :loading="isLoading">
-    <template #operation="{ record }">
-      <a-button type="link" @click="handleView(record)">查看</a-button>
-    </template>
-  </a-table>
+  <a-spin :spinning="data.loading">
+    <a-table
+      :columns="data.tableHead"
+      :data-source="data.tableData"
+      :pagination="pagination"
+      :scroll="{ x: data.tableWidth, y: data.tableHeight}"
+    >
+      <template #name="{ text }">{{ text.first }} {{ text.last }}</template>
+    </a-table>
+  </a-spin>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { Table, Button } from 'ant-design-vue';
+import { ref, defineProps, onMounted, reactive } from 'vue';
 
-// 定义 props 来接收 columns 和 tableData
+const data = reactive({
+    loading: false,
+    tableWidth: 5000,
+    tableHeight: 300,
+    tableHead: [],
+    tableData: []
+})
+
 const props = defineProps({
-  columns: {
-    type: Array,
-    required: true
-  },
-  tableData: {
-    type: Array,
+  chartData: {
+    type: Object,
     required: true
   }
 });
 
-// 加载状态
-const isLoading = ref(false);
 
-// 查看操作的处理函数，可根据业务需求完善
-const handleView = (record) => {
-  console.log('查看记录', record);
-};
-
-// 页面挂载时初始化
 onMounted(() => {
-  // 初始化加载状态
-  isLoading.value = false;
+  let winHeight = `${window.innerHeight}`;
+  data.tableHeight = winHeight - 430
+  initData();
+  if (!data.tableHead || data.tableHead == null || data.tableHead == undefined){
+    return;
+  }
+  if (data.tableHead.length > 50){
+    data.tableWidth = 24000
+  } else if (data.tableHead.length > 40){
+    data.tableWidth = 16000
+  } else if (data.tableHead.length > 30){
+    data.tableWidth = 8000
+  } else if (data.tableHead.length > 20){
+    data.tableWidth = 5000
+  }
 });
+
+
+function initData(){
+  if (!props || !props.chartData || !props.chartData.columns || !props.chartData.data){
+    return;
+  }
+  data.loading = true;
+  try {
+    let headInfos = new Array()
+    let resultColumns = props.chartData.columns
+    if (!resultColumns || resultColumns.length == 0){
+      data.tableHead = [];
+      data.loading = false
+      return;
+    }
+    for(let i = 0; i < resultColumns.length; i ++){
+        headInfos.push({title:resultColumns[i].columnDesc,dataIndex:resultColumns[i].columnName})
+    }
+    data.tableHead = headInfos
+    data.tableData = props.chartData.data
+    data.loading = false
+  } catch (error) {
+    data.loading = false;
+    message.error(error)
+  }
+  data.loading = false
+}
+
 </script>
 
 <style scoped>

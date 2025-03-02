@@ -32,7 +32,7 @@
               :columns="data.previewDataHead"
               :data-source="data.previewData"
               :pagination="false"
-              :scroll="{ x: 500, y: 400 }"
+              :scroll="{ x: data.tableWidth, y: 400 }"
             />
           </a-spin>
         </a-tab-pane>
@@ -61,6 +61,7 @@ const data = reactive({
     tableDetail:[],
     activeKey: '1',
     tableInfoHead:[{title: '字段名称',dataIndex: 'columnName',width: 200},{title: '字段说明',dataIndex: 'columnDesc',width: 300}],
+    tableWidth: 5000,
     previewDataHead:[],
     previewData:[],
     cardData:[]
@@ -80,6 +81,21 @@ const onClosePreview = () =>{
   data.activeKey = '1'
 }
 
+const flashTableWidth = () =>{
+  if (!data.previewDataHead || data.previewDataHead == null || data.previewDataHead == undefined){
+    return;
+  }
+  if (data.previewDataHead.length > 50){
+    data.tableWidth = 24000
+  } else if (data.previewDataHead.length > 40){
+    data.tableWidth = 16000
+  } else if (data.previewDataHead.length > 30){
+    data.tableWidth = 8000
+  } else if (data.previewDataHead.length > 20){
+    data.tableWidth = 5000
+  }
+}
+
 const queryTableInfo = async () => {
   data.loading = true;
   try {
@@ -95,7 +111,7 @@ const queryTableInfo = async () => {
 const queryTableDetail = async () => {
   try {
     data.loading = true;
-    const res: { rows: TableVo[];} = await tableDetail()
+    const res: { rows: TableVo[];} = await tableDetail({tableName: data.tableInfo.tableName})
     data.tableDetail = res;
   } catch (e) {
     data.loading = false;
@@ -106,19 +122,19 @@ const queryTableDetail = async () => {
 
 
 watch(() => data.activeKey, (newVal) => {
-  if (newVal === '2') {
-    getPreviewData(data.tableInfo);
+  if (newVal == '2') {
+    getPreviewData(data.tableDetail);
   }
 });
 
 const getPreviewData = async (obj) =>{
   if (data.activeKey == '2'){
-    if ((data.previewData && data.previewData.length > 0) && data.tableInfo.tableName == obj.tableName){
+    if (data.previewData && data.previewData.length > 0 && data.tableInfo.tableName == obj.tableName){
       return;
     }
     data.loading = true;
     try {
-      const res: { rows: TalkVo[];} = await queryPreviewData({ tableName: obj.tableName, content: "查询所有数据" });
+      const res: { rows: TalkVo[];} = await queryPreviewData({ tableName: data.tableInfo.tableName, content: "查询所有数据" });
       let colums = new Array()
       let resultColumns = res.columnList
       if (!resultColumns || resultColumns.length == 0){
@@ -130,6 +146,7 @@ const getPreviewData = async (obj) =>{
           colums.push({title:resultColumns[i].columnDesc,dataIndex:resultColumns[i].columnName,width: 200})
       }
       data.previewDataHead = colums
+      flashTableWidth()
       if (!res.dataList || res.dataList.length == 0){
         data.previewData = [];
         data.loading = false

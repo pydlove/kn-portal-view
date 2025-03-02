@@ -334,12 +334,12 @@ const initChart = async (index: number) => {
 const getChartData = (chartType: Message['chartType'], res: any) => {
   switch (chartType) {
     case 'table':
-      if (!res.tableData || !res.tableData.columns || !res.tableData.data) {
+      if (!res.tableData || !res.tableData.headers || !res.tableData.rows) {
         throw new Error('接口返回的 tableData 数据不完整');
       }
       return {
-        columns: res.tableData.columns,
-        data: res.tableData.data
+        columns: res.tableData.headers,
+        data: res.tableData.rows
       };
     case 'bar':
       if (!res.barData) {
