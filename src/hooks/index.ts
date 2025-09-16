@@ -3,7 +3,7 @@
  * @LastModifiedBy: chenamin
  * @Date: 2024-12-03 14:51:39
  * @LastEditTime: 2024-12-07 15:42:40
- * @FilePath: /cbdt-data-classification-categorization-front/src/hooks/index.ts
+ * @FilePath: /cbdt-data-classification-categorization-front/src/hooks/home.ts
  * @Description: file content
  */
 export { useTable } from './table/useTable'

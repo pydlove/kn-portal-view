@@ -14,20 +14,28 @@ export const useGlobalStore = defineStore(
   'global',
   () => {
     const repeatSubmit = ref<boolean>(false)
+    const isLightTheme = ref<boolean>(false)
+
     const setRepeatSubmit = (bool: boolean) => {
       repeatSubmit.value = bool
+    }
+
+    const setIsLightTheme = (bool: boolean) => {
+      isLightTheme.value = bool
     }
 
     return {
       repeatSubmit,
       setRepeatSubmit,
+      setIsLightTheme,
       themeConfig: {
         token: {
           // colorPrimary: '#1677ff',
           borderRadius: 3,
           // fontSize: 16
         }
-      }
+      },
+      isLightTheme: false
     }
   },
   {
@@ -40,3 +48,4 @@ export const useGlobalStore = defineStore(
 export function useGlobalStoreWithOut() {
   return useGlobalStore(store)
 }
+

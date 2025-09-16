@@ -131,6 +131,12 @@ export const useLoginStore = defineStore(
       })
 
     }
+    const jumpToNoAuth = () => {
+      router.push({
+        path: '/noAuth'
+      })
+
+    }
 
     return {
       token,
@@ -144,6 +150,7 @@ export const useLoginStore = defineStore(
       setToken,
       clearLoginStatus,
       jumpToLogin,
+      jumpToNoAuth,
       // jumpToSso,
       // sso
     }

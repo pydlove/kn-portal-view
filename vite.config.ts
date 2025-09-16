@@ -19,8 +19,8 @@ export default ({ mode }: any) => {
       port: 8081,
       open: true,
       proxy: {
-        '/one-table-service': {
-          target: 'http://127.0.0.1:8080',
+        '/kn-service': {
+          target: 'http://127.0.0.1:9090',
           changeOrigin: true,
           ws: false
           // rewrite: (path) => path.replace(/^\/api/, '')

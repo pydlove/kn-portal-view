@@ -97,7 +97,7 @@ service.interceptors.response.use(
     // Token verification failed, re-login or request timed out, redirect to login page
     if (status === 401 || status === 408) {
       promiseArr = {}
-      loginStore.jumpToLogin()
+      loginStore.jumpToNoAuth()
       return Promise.resolve({})
     }
     if (response) {
@@ -115,7 +115,7 @@ service.interceptors.response.use(
       if (status === 401) {
         const loginStore = useLoginStoreWithOut()
         // message.error('The user information is invalid. Please login again')
-        loginStore.jumpToLogin()
+        loginStore.jumpToNoAuth()
         return
       }
       if (status === 400) {
@@ -148,7 +148,7 @@ const request = async (opt: IApiConfig, isThrowErr = true) => {
     method: 'get',
     isHandleError: true,
     headers: { ...defaultHeader, ...headers },
-    baseURL: '/one-table-service',
+    baseURL: '/kn-service',
     ...restOpt
   }
 

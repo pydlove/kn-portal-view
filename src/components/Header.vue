@@ -1,307 +1,644 @@
+<!-- src/components/Header.vue -->
 <template>
-  <a-layout-header class="header">
-    <div class="logo">
-      <img :src="logo" alt="logo" class="logo-img"/>
-      <span class="logo-text">一表通</span>
+  <a-layout-header class="app-header">
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle" @click="toggleTheme">
+      {{ isLightTheme ? '🌙 暗色模式' : '☀️ 亮色模式' }}
     </div>
-    <a-menu mode="horizontal" :selected-keys="selectedKeys" class="main-menu">
-      <a-menu-item v-for="(menu, index) in menus" :key="menu.menuCode"
-                   @click="handleMenuClick(menu.menuCode)">
-        <router-link :to="menu.menuUrl" class="menu-link">{{
-            menu.menuName
-          }}
-        </router-link>
-      </a-menu-item>
-    </a-menu>
-    <div class="right-section">
-      <a-popover
-        placement="bottom"
-        trigger="hover"
-        :visible="popoverVisible"
-        @visible-change="handlePopoverVisibleChange"
-        class="message-popover"
-      >
-        <template #content>
-          <div class="notification-content">
-            <p v-if="messageData.length > 0" v-for="(message, index) in messageData"
-               :key="index">
-              消息{{ index + 1 }}: {{ message.content }}
-            </p>
-            <p v-else>
-              <img class="no-message" :src="noMessage"/>
-            </p>
+
+    <div class="menus-container">
+      <!-- 新增 Logo 区域 -->
+      <div class="logo-container" @click="goToHome">
+        <img
+          src="../assets/images/logo-new.png"
+          :alt="siteName"
+          class="logo-image"
+        />
+        <span class="logo-text">{{ siteName }}</span>
+      </div>
+
+      <div v-if="isMobile" v-show="isHome">
+
+        <div v-if="!isSidebarOpen" class="sidebar-header">
+          <!-- 三条横线图标 -->
+          <div class="hamburger-icon" @click="toggleSidebar">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
           </div>
-        </template>
-        <a-badge :count="messageCount" :offset="[10, 0]" class="message-badge">
-          <BellOutlined class="message-icon"/>
-        </a-badge>
-      </a-popover>
-      <a-dropdown trigger="click" class="user-dropdown">
-        <span class="ant-dropdown-link">
-          <UserOutlined class="user-icon"/>
-          <span class="user-name">{{ username }}</span>
-          <span class="ant-dropdown-icon-sizer"/>
-        </span>
-        <template #overlay>
-          <a-menu class="user-menu">
-            <a-menu-item key="logout" @click="doLogout">登出</a-menu-item>
-          </a-menu>
-        </template>
-      </a-dropdown>
+        </div>
+
+        <!-- 侧边栏菜单 -->
+        <div v-else class="sidebar" :class="{ 'active': !isSidebarOpen }">
+
+          <!-- 侧边栏头部 - 包含关闭按钮 -->
+          <div class="sidebar-header">
+            <div class="close-icon" @click="toggleSidebar">
+              ×
+            </div>
+          </div>
+
+          <nav class="sidebar-nav">
+            <div
+              v-for="menu in menuList"
+              :key="menu.id"
+              class="sidebar-item"
+              :class="{ active: isActiveMenu(menu.id) }"
+              @click.stop="goToMain(menu.id)"
+            >
+              <span>{{ menu.menuName }}</span>
+            </div>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Navigation Bar -->
+      <nav v-else class="navbar">
+        <div class="nav-container">
+          <div
+            v-for="menu in menuList"
+            :key="menu.id"
+            class="nav-item dropdown"
+            :class="{ active: isActiveMenu(menu.id) }"
+            @mouseenter="activeDropdown = menu.id"
+            @mouseleave="activeDropdown = ''"
+            @click.stop="goToMain(menu.id)"
+          >
+            <span>{{ menu.menuName }}</span>
+          </div>
+        </div>
+      </nav>
+
     </div>
   </a-layout-header>
 </template>
-<script setup>
-import logo from '@/assets/images/logo.png';
-import noMessage from '@/assets/images/no_message.png';
-import {onMounted, ref, watch} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
-import {Badge, Dropdown, Menu, Popover, message} from 'ant-design-vue';
-import {BellOutlined, UserOutlined} from '@ant-design/icons-vue';
-import {readMessage, messagePage} from '@/api/login/header.ts';
-import {logout} from '@/api/login/login.ts';
 
-const route = useRoute();
-const router = useRouter();
-const username = ref('');
-const selectedKeys = ref([]);
-const menus = ref([]);
-const menusJson = sessionStorage.getItem('_menus');
-if (menusJson) {
-  try {
-    const parsedMenus = JSON.parse(menusJson);
-    if (Array.isArray(parsedMenus)) {
-      menus.value = parsedMenus;
-      let menuCode = sessionStorage.getItem('menuCode');
-      console.log(menuCode);
-      if (menuCode) {
-        selectedKeys.value = [menuCode];
-        // 根据 menuCode 找到对应的 menuUrl 并进行路由导航
-        const activeMenu = parsedMenus.find(menu => menu.menuCode === menuCode);
-        if (activeMenu) {
-          router.push({ path: activeMenu.menuUrl });
-        }
-      } else {
-        selectedKeys.value = [parsedMenus[0].menuCode];
-        // 导航到默认的第一个菜单项
-        router.push({ path: parsedMenus[0].menuUrl });
-      }
-    }
-  } catch (error) {
-    console.error('解析 _menus 时出错:', error);
+<script setup>
+import {ref, onMounted} from 'vue'
+import {getRootMenus} from "../api/home/home.ts";
+import {useRouter, useRoute} from "vue-router";
+import {useGlobalStore} from "../store/modules/global.ts";
+import {checkIsMobile, isMobile} from "../utils/util.ts";
+
+const globalStore = useGlobalStore()
+const isLightTheme = ref(false)
+const loading = ref(false)
+const menuList = ref([])
+const router = useRouter()
+const route = useRoute()
+const activeDropdown = ref('')
+const isSidebarOpen = ref(false)
+const isHome = ref(true)
+
+// Logo 相关属性
+const siteName = ref('Momo Java 技术小窝') // 文字 logo 或网站名称
+
+// 跟踪当前激活的菜单ID
+const currentActiveMenuId = ref(route.query.menuId || '')
+
+// 判断菜单项是否为当前激活项
+const isActiveMenu = (menuId) => {
+  return currentActiveMenuId.value === menuId
+}
+
+// 跳转到首页
+const goToHome = () => {
+  currentActiveMenuId.value = ''
+  router.push({name: 'home'})
+  if (isMobile.value) {
+    isHome.value = true
+    isSidebarOpen.value = false
   }
 }
 
-const messageData = ref([]);
-const messageCount = ref(0);
-const popoverVisible = ref(false);
-
-const handleMenuClick = (menuCode) => {
-  sessionStorage.setItem('menuCode', menuCode);
-  selectedKeys.value = [menuCode];
-  const activeMenu = menus.value.find(menu => menu.menuCode === menuCode);
-  if (activeMenu) {
-    router.push({path: activeMenu.menuUrl});
-  }
-};
-
-const doLogout = async () => {
-  try {
-    await logout();
-    // 登出成功后导航到登录页
-    window.location.href = 'login';
-  } catch (error) {
-    console.error('登出失败:', error);
-    message.error('登出失败，请重试');
-  }
-};
-
-// 处理 popover 显示状态变化
-const handlePopoverVisibleChange = async (visible) => {
-  if (visible) {
-    popoverVisible.value = true;
-    try {
-      // 遍历 messageData 获取消息的 id 数组
-      const messageIds = messageData.value.map((message) => message.id);
-      console.log(messageIds);
-      await readMessage({ids: messageIds});
-      setTimeout(() => {
-        fetchMessages();
-      }, 5000);
-    } catch (error) {
-      console.error('标记消息为已读失败:', error);
-    }
-  } else {
-    setTimeout(() => {
-      popoverVisible.value = false;
-    }, 3000);
-  }
-};
-
-const fetchMessages = async () => {
-  try {
-    const res = await messagePage({
-      page: 1,
-      rows: 10,
-    });
-    console.log('header', res);
-    messageCount.value = res.total;
-    messageData.value = res.rows;
-  } catch (error) {
-    console.error('获取消息失败:', error);
-  }
-};
+// 切换侧边栏
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value
+}
 
 onMounted(() => {
-  fetchMessages();
-  username.value = sessionStorage.getItem('username');
-});
+
+  // 添加窗口大小变化监听器
+  checkIsMobile()
+
+  const savedTheme = localStorage.getItem('themePreference')
+  if (savedTheme === 'light') {
+    isLightTheme.value = true
+    globalStore.setIsLightTheme(true)
+  }
+
+  fetchTableData()
+})
+
+const toggleTheme = () => {
+  isLightTheme.value = !isLightTheme.value
+  localStorage.setItem('themePreference', isLightTheme.value ? 'light' : 'dark')
+
+  globalStore.setIsLightTheme(isLightTheme.value)
+}
+
+/**
+ * 添加跳转函数
+ * @param menuId
+ */
+const goToMain = (menuId) => {
+
+  if (isMobile.value) {
+    isHome.value = false
+  }
+
+  currentActiveMenuId.value = menuId
+  router.push({
+    name: 'main',
+    query: {
+      menuId: menuId
+    }
+  })
+}
+
+const fetchTableData = async () => {
+  loading.value = true
+  try {
+    menuList.value = await getRootMenus({})
+    console.log("root menu list:", menuList.value)
+  } catch (error) {
+    console.error('获取数据失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const groupChildren = (childrenMenu) => {
+  if (!childrenMenu || childrenMenu.length === 0) return []
+
+  // 按照菜单名称中的关键词进行分组
+  const groups = []
+  const processed = new Set()
+
+  childrenMenu.forEach(item => {
+    if (processed.has(item.id)) return
+
+    // 提取菜单名称中的关键词作为分组标题
+    let title = item.menuName
+    if (item.menuName.includes('-')) {
+      title = item.menuName.split('-')[0]
+    }
+
+    // 查找同组的其他菜单项
+    const groupItems = childrenMenu.filter(menu => {
+      if (processed.has(menu.id)) return false
+      const menuTitle = menu.menuName.includes('-') ? menu.menuName.split('-')[0] : menu.menuName
+      return menuTitle === title
+    })
+
+    // 标记这些项已处理
+    groupItems.forEach(menu => processed.add(menu.id))
+
+    groups.push({
+      title: title,
+      items: groupItems
+    })
+  })
+
+  console.log("groups", groups)
+
+  return groups
+}
+
+// 暴露给父组件使用
+defineExpose({
+  isLightTheme
+})
 </script>
 
 <style scoped>
-.header {
+.app-header {
+  position: fixed;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  cursor: pointer; /* 添加手型光标表示可点击 */
+}
+
+.fullstack-page .app-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #22272e;
+  color: #fff;
+}
+
+.fullstack-page.light-theme .app-header {
+  border-bottom: 1px solid #d9d9d9;
   background-color: #ffffff;
-  padding: 0 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   color: #333;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  height: 50px;
 }
 
-.main-menu {
-  background-color: #ffffff;
-  height: 50px !important;
-  line-height: 50px !important;
-}
-
-.logo {
+/* 新增 Logo 样式 */
+.logo-container {
   display: flex;
   align-items: center;
+  padding: 0 1rem;
+  min-width: 60px;
 }
 
-.logo-img {
-  width: 40px;
+.logo-image {
   height: 40px;
-  margin-right: 12px;
-  transition: transform 0.2s ease-in-out;
-}
-
-.logo-img:hover {
-  transform: scale(1.1);
+  width: auto;
+  border-radius: 20px;
 }
 
 .logo-text {
-  font-size: 20px;
-  font-weight: 600;
-  color: #007bff;
+  font-weight: bold;
+  font-size: 1.4rem;
+  margin-left: 20px;
 }
 
-.main-menu {
-  border-bottom: none;
-}
-
-.menu-link {
-  font-size: 16px;
-  color: #333;
-  padding: 16px 20px;
-  transition: color 0.2s ease-in-out;
-}
-
-.menu-link:hover {
-  color: #007bff;
-}
-
-.right-section {
+.header-title {
+  width: 20%;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.5rem;
+  padding: 0 1rem;
+  /* 使用系统字体 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+.menus-container {
+  height: 70px;
+  width: 90%;
+  display: flex;
+  flex-wrap: nowrap;
   align-items: center;
 }
 
-.message-popover {
-  margin-right: 24px;
-}
-
-.message-badge {
-  margin-right: 16px;
-}
-
-.message-icon {
-  font-size: 20px;
-  color: #333;
-  transition: color 0.2s ease-in-out;
-}
-
-.message-icon:hover {
-  color: #007bff;
-}
-
-.user-dropdown {
-  margin-right: 16px;
-}
-
-.user-icon {
-  font-size: 20px;
-  color: #333;
-  transition: color 0.2s ease-in-out;
-}
-
-.user-icon:hover {
-  color: #007bff;
-}
-
-.notification-content {
-  max-width: 300px;
-  padding: 16px;
-  background-color: #fff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-}
-
-.notification-content p {
-  margin: 8px 0;
+/* 主题切换按钮 */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 10px;
+  padding: 5px 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  cursor: pointer;
+  z-index: 1000;
   font-size: 14px;
-  color: #333;
 }
 
-.no-message {
-  width: 200px;
-  height: 200px;
-  display: block;
-  margin: 0 auto;
+.navbar {
+  flex: 1;
 }
 
-:deep(.ant-scroll-number) {
-  right: 18px !important;
+.nav-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: right;
 }
 
-:deep(.ant-popover-content) {
-  width: 300px !important;
-  max-height: 300px !important;
-  left: -63px !important;
+.nav-item {
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  transition: all 0.3s ease;
+  max-width: 200px;
+  min-width: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 5px;
 }
 
-:deep(.ant-popover-arrow) {
-  right: 20px !important;
+/* 悬停时显示底部线条 */
+.nav-item:hover::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #1890ff;
 }
 
-.user-menu {
-  background-color: #fff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
+/* 选中菜单始终显示底部线条 */
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #1890ff;
 }
 
-.user-menu.ant-menu-item {
-  font-size: 14px;
-  color: #333;
-  transition: background-color 0.2s ease-in-out;
+/* 点击时的按钮式交互效果 */
+.nav-item span {
+  transition: all 0.2s ease;
+  display: inline-block;
 }
 
-.user-menu.ant-menu-item:hover {
-  background-color: #f8f9fa;
+.nav-item:active span {
+  transform: scale(0.95);
+  opacity: 0.8;
 }
 
-.user-name {
-  margin-left: 5px;
+.dropdown {
+  cursor: pointer;
+}
+
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 800px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  display: flex;
+  padding: 1rem;
+  border-radius: 0 0 8px 8px;
+}
+
+.dropdown-column {
+  flex: 1;
+  padding: 0 1rem;
+}
+
+.dropdown-column h4 {
+  color: #4CAF50;
+  margin: 0.5rem 0;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .menus-container {
+    height: 60px;
+    padding: 0 10px;
+  }
+
+  .logo-container {
+    padding: 0;
+  }
+
+  .logo-image {
+    height: 30px;
+  }
+
+  .logo-text {
+    font-size: 1rem;
+    margin-left: 10px;
+    display: none;
+  }
+
+  .mobile-menu-toggle {
+    display: flex;
+  }
+
+  .navbar {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background-color: inherit;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .navbar.mobile-active {
+    display: block;
+  }
+
+  .nav-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .nav-item {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    margin: 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .logo-text {
+    font-size: 16px;
+    margin-left: 10px;
+  }
+
+  .logo-image {
+    height: 30px;
+    width: auto;
+  }
+
+  .theme-toggle {
+    position: fixed;
+    top: 15px;
+    left: 50px;
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    cursor: pointer;
+    z-index: 1000;
+    font-size: 14px;
+    width: 100px;
+  }
+
+  /* 侧边栏遮罩 */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* 侧边栏 */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    right: 0px;
+    width: 300px;
+    height: 100%;
+    background-color: #fff;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+  }
+
+  .fullstack-page .sidebar {
+    background-color: #22272e;
+    color: #fff;
+  }
+
+  .sidebar.active {
+    left: 0;
+    display: none;
+  }
+
+  .sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    height: 50px;
+  }
+
+  .sidebar-header .logo-container {
+    padding: 0;
+  }
+
+  .sidebar-header .logo-text {
+    font-size: 1.1rem;
+    margin-left: 10px;
+  }
+
+  .close-btn {
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+  }
+
+  .close-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .sidebar-nav {
+    padding: 10px 0;
+  }
+
+  .sidebar-item {
+    padding: 15px 20px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .fullstack-page .sidebar-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .sidebar-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding-left: 25px;
+  }
+
+  .fullstack-page .sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .sidebar-item.active {
+    background-color: #1890ff;
+    color: #fff;
+  }
+
+  /* 三条横线图标 */
+  .hamburger-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+    position: fixed;
+    right: 10px;
+    top: 13px;
+  }
+
+  .hamburger-line {
+    width: 100%;
+    height: 3px;
+    background: #333;
+    transition: all 0.3s linear;
+    position: relative;
+    border-radius: 2px;
+  }
+
+  .fullstack-page .hamburger-line {
+    background: #fff;
+  }
+
+  .fullstack-page.light-theme .hamburger-line {
+    background: #333;
+  }
+
+  .close-icon {
+    font-size: 36px;
+    cursor: pointer;
+    padding: 5px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    position: fixed;
+    right: 10px;
+    top: 15px;
+  }
+
+  .close-icon:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .fullstack-page .close-icon {
+    color: #fff;
+  }
+
+  .fullstack-page .close-icon:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .fullstack-page.light-theme .sidebar {
+    background-color: #ffffff;
+    color: #333333;
+  }
+
+  .fullstack-page.light-theme .close-icon {
+    color: #333;
+  }
+
+  .sidebar-header {
+    height: 60px;
+  }
+
+  .fullstack-page .sidebar-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .fullstack-page.light-theme .sidebar-header {
+    border-bottom: 1px solid #eeeeee;
+  }
+
+  .sidebar {
+    overflow: auto;
+    height: calc(100vh);
+  }
 }
 </style>

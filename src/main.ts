@@ -4,9 +4,11 @@ import Antd from 'ant-design-vue'
 import GlobalComponent from '@/components'
 import { setupStore } from '@/store'
 import '@/assets/icons/iconfont/iconfont.js'
+
 // CSS common style sheet
 import './styles/scss/common.scss'
 import './styles/css/common.css'
+import './styles/scss/markdown.scss'
 
 import App from './App.vue'
 import { setupRouter } from './router'

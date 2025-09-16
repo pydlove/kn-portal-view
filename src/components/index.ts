@@ -3,7 +3,7 @@
  * @LastModifiedBy: chenamin
  * @Date: 2024-11-28 11:28:05
  * @LastEditTime: 2024-12-24 21:59:13
- * @FilePath: /cbdt-data-classification-categorization-front/src/components/index.ts
+ * @FilePath: /cbdt-data-classification-categorization-front/src/components/home.ts
  * @Description: file content
  */
 import SvgIcon from '@/components/Icon/Icon.vue'

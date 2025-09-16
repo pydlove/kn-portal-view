@@ -18,10 +18,10 @@
 <!--        <a-button class="mr-20 mb-20" type="primary" :danger="true" @click="batchReject">-->
 <!--          批量拒绝-->
 <!--        </a-button>-->
-        <a-button class="mr-20 mb-20" type="primary" @click="openApplyModal">申请权限
-        </a-button>
-        <a-button class="mr-20 mb-20" type="primary" @click="checkAccessAuthRequest">检测是否有权限访问表
-        </a-button>
+<!--        <a-button class="mr-20 mb-20" type="primary" @click="openApplyModal">申请权限-->
+<!--        </a-button>-->
+<!--        <a-button class="mr-20 mb-20" type="primary" @click="checkAccessAuthRequest">检测是否有权限访问表-->
+<!--        </a-button>-->
       </div>
       <a-table
         :columns="applyTableColumns"

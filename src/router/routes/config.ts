@@ -1,4 +1,5 @@
-import { type RouteRecordRaw } from 'vue-router'
+import {type RouteRecordRaw} from 'vue-router'
+
 export interface IMeta {
   customMenu?: string
   customTailMenus?: { menuName: string; url?: string }[]
@@ -7,47 +8,61 @@ export interface IMeta {
   customContentHeader?: boolean // background: grey
   showBack?: boolean
 }
+
 export const BASIC_ROUTES: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'root',
-    meta: { hideHeader: false },
-    component: import('@/views/login/index.vue')
+    meta: {hideHeader: false},
+    component: import('@/views/kn/home/index.vue')
   },
+
   {
-    path: '/login',
-    name: 'login',
-    meta: { hideHeader: true },
-    component: () => import('@/views/login/index.vue')
+    path: '/home',
+    name: 'home',
+    component: () => import('@/views/kn/home/index.vue')
   },
+
   {
-    path: '/apply',
-    name: 'apply',
-    meta: { hideHeader: false },
-    component: () => import('@/views/table/apply/index.vue')
-  },
-  {
-    path: '/query',
-    name: 'query',
-    meta: { hideHeader: false },
-    component: () => import('@/views/table/query/index.vue')
+    path: '/main',
+    name: 'main',
+    component: () => import('@/views/kn/main/index.vue')
   },
   {
     path: '/test',
     name: 'test',
-    meta: { hideHeader: false },
     component: () => import('@/views/test/index.vue')
   },
+
   {
-    path: '/data',
-    name: 'data',
-    meta: { hideHeader: false },
-    component: () => import('@/views/data/index.vue')
+    path: '/noAuth',
+    name: 'noAuth',
+    meta: {hideHeader: true},
+    component: () => import('@/views/NoPermission.vue')
   },
   {
-    path: '/user',
-    name: 'user',
-    meta: { hideHeader: false },
-    component: () => import('@/views/sys/user/index.vue')
+    path: '/error',
+    name: 'error',
+    meta: {hideHeader: true},
+    component: () => import('@/views/ErrorPage.vue')
   },
+  {
+    path: '/index',
+    name: 'index',
+    meta: {hideHeader: true},
+    component: () => import('@/views/kn/console/index/index.vue')
+  },
+  {
+    path: '/menu',
+    name: 'menu',
+    meta: {hideHeader: true},
+    component: () => import('@/views/kn/console/menu/index.vue')
+  },
+  {
+    path: '/article',
+    name: 'article',
+    meta: {hideHeader: true},
+    component: () => import('@/views/kn/console/article/index.vue')
+  }
+
 ]
