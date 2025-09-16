@@ -21,6 +21,7 @@
   scroll-margin-top: 80px;
   padding-left: 8px;
   color: #ffffff; /* 暗色模式下的标题颜色 */
+  letter-spacing: 1pt;
 }
 
 .fullstack-page.light-theme .markdown-content h1,
@@ -73,6 +74,10 @@
 
 .fullstack-page.light-theme .markdown-content p {
   color: #333; /* 亮色模式下的小标题颜色 */
+}
+
+.fullstack-page.light-theme .mermaid p {
+  color: #ffffff; /* 亮色模式下的小标题颜色 */
 }
 
 /* 优化列表样式 */
@@ -284,6 +289,10 @@
   padding: 12px 16px;
   transition: all 0.2s ease;
   fill: #d4d4d4;
+}
+
+.fullstack-page.light-theme  .markdown-content .mermaid .node {
+  color: #ffffff;
 }
 
 .markdown-content .mermaid .node:hover {

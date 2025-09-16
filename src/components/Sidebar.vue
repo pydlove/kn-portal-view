@@ -108,7 +108,10 @@ import {useRoute, useRouter} from 'vue-router'
 import {getSubMenus} from "@/api/home/home";
 import {checkIsMobile, isMobile} from "@/utils/util";
 
-const props = defineProps<{ activeMenuId?: string }>()
+const props = defineProps<{
+  activeMenuId?: number,
+  title?: TitleItem
+}>()
 const activeMenuIdRef = ref<string | null>(null)
 const articleMenuList = ref<MenuItem[]>([])
 const isExpanded = ref<{ [key: number]: boolean }>({}) // 记录每个菜单的展开状态
@@ -121,6 +124,7 @@ const toggleSidebar = () => {
 }
 
 export interface TitleItem {
+  menuId: number
   articleId: number
   title: string
 }
@@ -133,8 +137,8 @@ interface MenuItem {
 
 const fetchMenuData = async () => {
   try {
+
     articleMenuList.value = await getSubMenus({parentMenuId: activeMenuIdRef.value})
-    console.log('sub menu list:', articleMenuList.value)
 
     // 初始化展开状态
     articleMenuList.value.forEach(menu => {
@@ -150,16 +154,38 @@ const fetchMenuData = async () => {
       articleMenuList.value[0].articleTitleList &&
       articleMenuList.value[0].articleTitleList.length > 0) {
       firstArticle.value = articleMenuList.value[0].articleTitleList[0]
+      firstArticle.value.menuId = articleMenuList.value[0].menuId
+
+      const storedArticle = sessionStorage.getItem('selectedArticle');
+      if (!storedArticle) {
+        activeArticleId.value = firstArticle.value.articleId
+      }
+
+    } else {
+      firstArticle.value = null
     }
 
   } catch (error) {
     console.error('获取菜单数据失败:', error)
+    firstArticle.value = null
   }
 }
 
 // 切换菜单展开/收起
 const toggleMenu = (menuId: number) => {
-  isExpanded.value[menuId] = !isExpanded.value[menuId]
+  const isCurrentlyExpanded = isExpanded.value[menuId];
+  console.log('toggleMenu', menuId, isCurrentlyExpanded)
+
+  // 先关闭所有菜单
+  Object.keys(isExpanded.value).forEach(key => {
+    isExpanded.value[Number(key)] = false;
+  });
+
+  // 如果之前是收起状态，则展开当前菜单
+  // 如果之前是展开状态，则保持收起（允许手动收起）
+  if (!isCurrentlyExpanded) {
+    isExpanded.value[menuId] = true;
+  }
 }
 
 // 判断菜单是否激活
@@ -174,27 +200,40 @@ const isActiveArticle = (articleId: number) => {
 
 // 在 script setup 的顶部添加
 const emit = defineEmits<{
-  (e: 'article-click', article: TitleItem): void
+  (e: 'handleArticleSelected', article: TitleItem): void
 }>()
 
 // 处理文章点击
-const handleArticleClick = (article: TitleItem) => {
+const handleArticleClick = (article: TitleItem, isToggleMenu: boolean = false) => {
 
   if (isMobile.value) {
     toggleSidebar()
   }
 
   activeArticleId.value = article.articleId // 设置当前选中的文章ID
-  emit('article-click', article)
+
+  if (isToggleMenu) {
+    toggleMenu(article.menuId)
+  }
+
+  emit('handleArticleSelected', article)
+}
+
+const checkHasSelectedArticle = () => {
+  const storedArticle = sessionStorage.getItem('selectedArticle');
+  if (storedArticle) {
+    const article = JSON.parse(storedArticle);
+
+    console.log(1111)
+    handleArticleClick(article, true);
+  }
 }
 
 watch(
-  () => props.activeMenuId,
-  (newActiveMenuId) => {
-    if (newActiveMenuId) {
-      activeMenuIdRef.value = newActiveMenuId
-      console.log('activeMenuId updated:', activeMenuIdRef.value)
-
+  () => props,
+  (props) => {
+    if (props) {
+      activeMenuIdRef.value = props.activeMenuId
       fetchMenuData()
     }
   },
@@ -204,10 +243,13 @@ watch(
 onMounted(() => {
 
   checkIsMobile()
+
+  checkHasSelectedArticle()
 })
 
 defineExpose({
-  firstArticle
+  firstArticle,
+  checkHasSelectedArticle
 })
 </script>
 

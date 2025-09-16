@@ -1,21 +1,22 @@
 <!-- src/views/kn/main/index.vue -->
 <template>
-  <div>
+  <div :key="menuId">
     <div v-if="isMobile" class="main-container">
       <Sidebar
         ref="sidebarRef"
         class="sidebar-container"
         :class="{ 'sidebar-hidden': isSidebarHidden }"
         :activeMenuId="menuId"
+        :title="title"
         @article-click="handleArticleSelected"
       ></Sidebar>
 
       <div class="content-container">
         <div class="article-content">
-          <div v-if="articleContent">
+          <div v-if="articleContent && articleContent.articleContent">
             <div>
               <div class="article-title">
-                {{ title.title }}
+                {{ articleContent.articleTitle }}
               </div>
             </div>
 
@@ -24,7 +25,7 @@
                  v-html="renderedMarkdown"></div>
           </div>
           <div v-else class="empty-content">
-            请选择一篇文章查看内容
+            请耐心等待作者创作
           </div>
         </div>
 
@@ -38,15 +39,15 @@
         class="sidebar-container"
         :class="{ 'sidebar-hidden': isSidebarHidden }"
         :activeMenuId="menuId"
-        @article-click="handleArticleSelected"
+        @handleArticleSelected="handleArticleSelected"
       ></Sidebar>
 
       <div class="content-container">
         <div class="article-content">
-          <div v-if="articleContent">
+          <div v-if="articleContent && articleContent.articleContent">
             <div>
               <div class="article-title">
-                {{ title.title }}
+                {{ articleContent.articleTitle }}
               </div>
             </div>
 
@@ -55,7 +56,7 @@
                  v-html="renderedMarkdown"></div>
           </div>
           <div v-else class="empty-content">
-            请选择一篇文章查看内容
+            请耐心等待作者创作
           </div>
         </div>
 
@@ -118,12 +119,13 @@ import {TitleItem} from "@/components/Sidebar.vue";
 import {getArticle} from "@/api/home/home";
 import {ArticleVO} from "@/views/kn/console/article/type";
 import {checkIsMobile, doScrollToTop, isMobile} from "@/utils/util";
+import {setStorageArticle} from "./main";
 
 
 const sidebarRef = ref(null)
 const title = ref<TitleItem>('')
 const route = useRoute()
-const menuId = ref(route.query.menuId || '')
+const menuId = ref<number>(route.query.menuId || null)
 const tocList = ref<Array<{ id: string, title: string, level: number }>>([])
 const articleContent = ref<ArticleVO>({} as ArticleVO)
 
@@ -138,6 +140,17 @@ const toggleSidebar = () => {
 // 处理文章选择
 const handleArticleSelected = async (article: number) => {
   title.value = article;
+
+  // 存储选中的文章信息
+  const articleInfo = {
+    rootMenuId: menuId.value,
+    menuId: title.value.menuId,
+    articleId: title.value.articleId,
+    title: title.value.title,
+    timestamp: Date.now()
+  };
+  sessionStorage.setItem('selectedArticle', JSON.stringify(articleInfo));
+
   await loadArticleContent()
 }
 
@@ -197,6 +210,7 @@ const scrollToTop = () => {
 
 // 加载文章内容
 const loadArticleContent = async () => {
+
   // 修正判断条件
   if (!title.value || !title.value.articleId) return
 
@@ -204,7 +218,7 @@ const loadArticleContent = async () => {
     // 获取文章内容
     const articleData = await getArticle({articleId: title.value.articleId})
     articleContent.value = articleData
-    console.log("文章", articleContent.value)
+    console.log('文章内容:', articleData)
 
     // 生成目录
     generateTOC(articleData.articleContent)
@@ -216,10 +230,13 @@ const loadArticleContent = async () => {
 const checkFirstArticle = () => {
   if (sidebarRef.value && sidebarRef.value.firstArticle) {
     title.value = sidebarRef.value.firstArticle
-    console.log('first article:', sidebarRef.value.firstArticle.value)
+    setStorageArticle(menuId.value, sidebarRef.value.firstArticle.menuId, sidebarRef.value.firstArticle.articleId, sidebarRef.value.firstArticle.title)
     loadArticleContent()
+    return true; // 表示成功选中了第一个文章
   } else {
+    // 如果还没有获取到 firstArticle，继续检查
     setTimeout(checkFirstArticle, 100)
+    return false;
   }
 }
 
@@ -234,20 +251,55 @@ onMounted(() => {
   });
 
   nextTick(() => {
-    checkFirstArticle()
+    doMenuChange()
   })
 
 })
 
+const doMenuChange = () => {
+  const storedArticle = sessionStorage.getItem('selectedArticle');
+  if (!storedArticle) {
+    const shouldSelectFirst = route.query.selectFirst === 'true';
+
+    if (shouldSelectFirst) {
+      setTimeout(() => {
+        checkFirstArticle();
+      }, 300);
+    } else if (!title.value || !title.value.articleId) {
+      setTimeout(() => {
+        checkFirstArticle();
+      }, 200);
+    }
+  }
+}
+
 // 监听路由变化
 watch(
-  () => route.query.menuId,
-  (newMenuId) => {
-    menuId.value = newMenuId || ''
-    // 加载对应的文章内容
-    if (newMenuId) {
-      loadArticleContent()
-    }
+  () => route.query,
+  (query) => {
+    menuId.value = query.menuId || ''
+    let type = query.type || ''
+
+    // 清空当前文章内容
+    articleContent.value = {} as ArticleVO;
+    title.value = {articleId: 0, title: ''};
+    tocList.value = [];
+
+    // 检查是否有存储的文章信息
+    nextTick(() => {
+      if (type == 'search') {
+        const storedArticle = sessionStorage.getItem('selectedArticle');
+        if (storedArticle) {
+          const article = JSON.parse(storedArticle);
+          console.log('storedArticle', article)
+          handleArticleSelected(article);
+
+          sidebarRef.value.checkHasSelectedArticle();
+        }
+      } else {
+        doMenuChange()
+      }
+    });
   }
 )
 
@@ -267,9 +319,6 @@ renderer.code = function ({text, lang, escaped}: {
 }) {
 
   if (lang === 'mermaid') {
-    console.log('text', text)
-    console.log('lang', lang)
-    console.log('escaped', escaped)
     return `<div class="mermaid">${text}</div>`;
   }
 
@@ -305,7 +354,6 @@ watch(renderedMarkdown, () => {
           bindFunctions?: (element: Element) => void
         }) => {
           const {svg, bindFunctions} = result;
-          console.log('generated svg:', svg);
 
           // 直接将 SVG 字符串插入到 block 中
           block.innerHTML = svg;
@@ -318,7 +366,6 @@ watch(renderedMarkdown, () => {
             }
           }
 
-          console.log('block after render:', block);
         });
       } catch (error) {
         console.error('Mermaid rendering error:', error);
@@ -564,6 +611,10 @@ watch(renderedMarkdown, () => {
     line-height: 24px;
     margin-bottom: 10px;
     margin-top: 10px;
+  }
+
+  .main-container {
+    height: calc(100vh - 100px);
   }
 }
 </style>

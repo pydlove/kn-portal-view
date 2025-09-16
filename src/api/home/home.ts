@@ -31,3 +31,11 @@ export function getArticle(data: {articleId: number}) {
     method: 'get'
   })
 }
+
+export function searchArticleFulltext(data: {content: string, pageNum: number; pageSize: number}) {
+  return request({
+    url: '/article/search/page',
+    data,
+    method: 'get'
+  })
+}

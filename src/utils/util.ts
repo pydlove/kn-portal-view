@@ -18,6 +18,5 @@ export const doScrollToTop = (id: any) => {
 // 检测是否为移动端
 export const checkIsMobile = () => {
   isMobile.value = window.innerWidth <= 768
-  console.log('isMobile:', isMobile.value)
 }
 

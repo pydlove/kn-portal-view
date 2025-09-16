@@ -6,6 +6,12 @@
       {{ isLightTheme ? '🌙 暗色模式' : '☀️ 亮色模式' }}
     </div>
 
+    <!-- 搜索按钮 -->
+    <div class="search-toggle" @click="doOpenSearchModal">
+      <span>⌕</span>
+      <span class="search-shortcut">Ctrl+K</span>
+    </div>
+
     <div class="menus-container">
       <!-- 新增 Logo 区域 -->
       <div class="logo-container" @click="goToHome">
@@ -68,8 +74,11 @@
           </div>
         </div>
       </nav>
-
     </div>
+
+    <SearchTool ref="searchToolRef"
+                @handleSelectMenu="handleSelectMenu"
+    />
   </a-layout-header>
 </template>
 
@@ -79,6 +88,8 @@ import {getRootMenus} from "../api/home/home.ts";
 import {useRouter, useRoute} from "vue-router";
 import {useGlobalStore} from "../store/modules/global.ts";
 import {checkIsMobile, isMobile} from "../utils/util.ts";
+import SearchTool from "./SearchTool.vue";
+import {goToMainPage} from "../views/kn/main/main.ts";
 
 const globalStore = useGlobalStore()
 const isLightTheme = ref(false)
@@ -96,6 +107,31 @@ const siteName = ref('Momo Java 技术小窝') // 文字 logo 或网站名称
 // 跟踪当前激活的菜单ID
 const currentActiveMenuId = ref(route.query.menuId || '')
 
+const searchToolRef = ref(null)
+
+const doOpenSearchModal = () => {
+  searchToolRef.value?.openSearchModal()
+}
+
+// 重置移动端状态
+const resetMobileState = () => {
+  if (isMobile.value) {
+    isHome.value = true
+    isSidebarOpen.value = false
+  }
+}
+
+// 处理搜索结果选择事件
+const handleSelectMenu = (rootMenuId, type) => {
+
+  // 切换菜单
+  currentActiveMenuId.value = rootMenuId
+
+  goToMainPage(router, rootMenuId, type)
+
+  resetMobileState()
+}
+
 // 判断菜单项是否为当前激活项
 const isActiveMenu = (menuId) => {
   return currentActiveMenuId.value === menuId
@@ -105,10 +141,8 @@ const isActiveMenu = (menuId) => {
 const goToHome = () => {
   currentActiveMenuId.value = ''
   router.push({name: 'home'})
-  if (isMobile.value) {
-    isHome.value = true
-    isSidebarOpen.value = false
-  }
+
+  resetMobileState()
 }
 
 // 切换侧边栏
@@ -147,20 +181,17 @@ const goToMain = (menuId) => {
     isHome.value = false
   }
 
+  sessionStorage.removeItem('selectedArticle');
+
   currentActiveMenuId.value = menuId
-  router.push({
-    name: 'main',
-    query: {
-      menuId: menuId
-    }
-  })
+
+  goToMainPage(router, menuId, 'menu')
 }
 
 const fetchTableData = async () => {
   loading.value = true
   try {
     menuList.value = await getRootMenus({})
-    console.log("root menu list:", menuList.value)
   } catch (error) {
     console.error('获取数据失败:', error)
   } finally {
@@ -372,7 +403,70 @@ defineExpose({
   font-size: 1rem;
 }
 
+/* 搜索按钮样式 */
+.search-toggle {
+  position: fixed;
+  top: 20px;
+  right: 120px;
+  padding: 6px 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  cursor: pointer;
+  z-index: 1000;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s ease;
+}
+
+.search-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+}
+
+.search-shortcut {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.fullstack-page.light-theme .search-toggle {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.fullstack-page.light-theme .search-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
 @media (max-width: 768px) {
+  .sidebar-header {
+    border-bottom: 0 !important;
+  }
+
+  .search-toggle {
+    position: fixed;
+    top: 8px;
+    left: 70px;
+    font-size: 12px;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: unset;
+    padding: unset;
+  }
+
+  .search-toggle span {
+    font-size: 32px;
+    line-height: 45px;
+    text-align: center;
+    display: block;
+  }
+
+  .search-shortcut {
+    display: none !important;
+  }
+
   .menus-container {
     height: 60px;
     padding: 0 10px;
@@ -435,7 +529,7 @@ defineExpose({
   .theme-toggle {
     position: fixed;
     top: 15px;
-    left: 50px;
+    right: 50px;
     padding: 5px 10px;
     background-color: rgba(0, 0, 0, 0.2);
     border-radius: 20px;
@@ -639,6 +733,10 @@ defineExpose({
   .sidebar {
     overflow: auto;
     height: calc(100vh);
+  }
+
+  .logo-image {
+    height: 40px;
   }
 }
 </style>
