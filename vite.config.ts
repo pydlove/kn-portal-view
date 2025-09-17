@@ -20,7 +20,8 @@ export default ({ mode }: any) => {
       open: true,
       proxy: {
         '/kn-service': {
-          target: 'http://127.0.0.1:9090',
+          // target: 'http://127.0.0.1:9090',
+          target: 'http://112.124.109.1:9443',
           changeOrigin: true,
           ws: false
           // rewrite: (path) => path.replace(/^\/api/, '')

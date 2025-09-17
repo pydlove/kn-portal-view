@@ -281,6 +281,7 @@ defineExpose({
   font-weight: bold;
   font-size: 1.4rem;
   margin-left: 20px;
+  min-width: 250px;
 }
 
 .header-title {
@@ -324,6 +325,7 @@ defineExpose({
   display: flex;
   flex-wrap: wrap;
   justify-content: right;
+  min-width: 1200px;
 }
 
 .nav-item {
@@ -438,6 +440,14 @@ defineExpose({
 .fullstack-page.light-theme .search-toggle:hover {
   background-color: rgba(0, 0, 0, 0.2);
 }
+
+@media (max-width: 1200px) {
+  .nav-item {
+    padding: 0px;
+    font-size: 12px;
+  }
+}
+
 
 @media (max-width: 768px) {
   .sidebar-header {

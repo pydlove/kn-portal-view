@@ -96,6 +96,7 @@ import {onMounted, onBeforeUnmount} from 'vue'
 import Footer from '../../../components/Footer.vue'
 import ReturnTop from '../../../components/ReturnTop.vue'
 import {doScrollToTop, isMobile} from "@/utils/util";
+import {goToMainPage} from "@/views/kn/main/main";
 
 const router = useRouter()
 
@@ -104,31 +105,15 @@ const scrollToTop = () => {
 }
 
 const goToLearning = () => {
-  router.push({
-    name: 'main',
-    query: {
-      menuId: 1
-    }
-  })
+  goToMainPage(router, 1, 'menu')
 }
 
 const goToAbout = () => {
-  router.push({
-    name: 'main',
-    query: {
-      menuId: 1
-    }
-  })
+  goToMainPage(router, 1, 'menu')
 }
 
 const goToFullStack = () => {
-  // 跳转到全栈知识体系
-  router.push({
-    name: 'main',
-    query: {
-      menuId: 1
-    }
-  })
+  goToMainPage(router, 1, 'menu')
 }
 
 // 滚动到内容区域

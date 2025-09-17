@@ -122,8 +122,10 @@
   line-height: 1.5;
   background-color: #2d3748;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: auto;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  table-layout: auto;
+  display: block;
 }
 
 .fullstack-page .markdown-content table {
@@ -348,6 +350,23 @@
   d: "M0,0 L10,5 L0,10 Z";
 }
 
+/* IDEA风格代码块样式 - 使用 Prism.js 的主题 */
+.markdown-content pre[class*="language-"] {
+  padding: 24px;
+  overflow: auto;
+  font-size: 15px;
+  line-height: 1.5;
+  border-radius: 6px;
+  margin: 26px 0;
+  position: relative;
+  background-color: #2d3748;
+  border: 1px solid #4a5568;
+}
+
+.markdown-content code[class*="language-"] {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', monospace;
+  text-shadow: none;
+}
 
 @media (max-width: 768px) {
   /* 优化文章内容样式 */
@@ -430,6 +449,10 @@
     font-size: 13px;
     line-height: 22px;
     border-radius: 6px;
+    overflow: auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    table-layout: auto;
+    display: block;
   }
 
   .markdown-content th,

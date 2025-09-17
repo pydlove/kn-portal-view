@@ -8,7 +8,7 @@
         :class="{ 'sidebar-hidden': isSidebarHidden }"
         :activeMenuId="menuId"
         :title="title"
-        @article-click="handleArticleSelected"
+        @handleArticleSelected="handleArticleSelected"
       ></Sidebar>
 
       <div class="content-container">
@@ -114,6 +114,10 @@ import 'prismjs/components/prism-python'
 import 'prismjs/components/prism-css'
 import 'prismjs/components/prism-json'
 import 'prismjs/components/prism-bash'
+import 'prismjs/components/prism-xml-doc'
+import 'prismjs/components/prism-sql'
+import 'prismjs/components/prism-yaml'
+import 'prismjs/components/prism-properties'
 import mermaid from 'mermaid'
 import {TitleItem} from "@/components/Sidebar.vue";
 import {getArticle} from "@/api/home/home";
@@ -139,6 +143,7 @@ const toggleSidebar = () => {
 
 // 处理文章选择
 const handleArticleSelected = async (article: number) => {
+
   title.value = article;
 
   // 存储选中的文章信息
@@ -320,6 +325,28 @@ renderer.code = function ({text, lang, escaped}: {
 
   if (lang === 'mermaid') {
     return `<div class="mermaid">${text}</div>`;
+  }
+
+  // 处理XML文档代码块
+  if (lang === 'xml' || lang === 'xml-doc') {
+    console.log('XML文档代码块',  text)
+
+    const safeText = text.replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+    return `<pre><code class="language-xml">${safeText}</code></pre>`;
+  }
+
+  // 处理SQL代码块
+  if (lang === 'sql') {
+    const safeText = text.replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+    return `<pre><code class="language-sql">${safeText}</code></pre>`;
   }
 
   // 其他代码块保持原有处理

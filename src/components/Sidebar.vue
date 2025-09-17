@@ -48,7 +48,7 @@
                   class="mb-submenu-item">
                 <a
                   href="#"
-                  @click.prevent="handleArticleClick(article)"
+                  @click.prevent="handleArticleClick(article, false)"
                   :title="article.title"
                   :class="{ 'mb-article-active': isActiveArticle(article.articleId) }"
                 >
@@ -224,7 +224,6 @@ const checkHasSelectedArticle = () => {
   if (storedArticle) {
     const article = JSON.parse(storedArticle);
 
-    console.log(1111)
     handleArticleClick(article, true);
   }
 }
