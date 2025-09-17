@@ -473,9 +473,9 @@ watch(renderedMarkdown, () => {
 
 .article-title {
   text-align: left;
-  font-size: 2.2rem;
+  font-size: 28px;
   font-weight: 700;
-  margin: 0 0 30px 0;
+  margin: 0 0 20px 0;
   padding: 25px 30px;
   color: #2c3e50;
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);

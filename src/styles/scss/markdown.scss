@@ -14,10 +14,10 @@
 .markdown-content h4,
 .markdown-content h5,
 .markdown-content h6 {
-  margin-top: 36px;
-  margin-bottom: 20px;
+  margin-top: 15px;
+  margin-bottom: 15px;
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 32px;
   scroll-margin-top: 80px;
   padding-left: 8px;
   color: #ffffff; /* 暗色模式下的标题颜色 */
@@ -34,29 +34,29 @@
 }
 
 .markdown-content h1 {
-  font-size: 1.6em;
+  font-size: 24px;
   padding-bottom: 0.6em;
 }
 
 .markdown-content h2 {
-  font-size: 1.4em;
+  font-size: 22px;
   padding-bottom: 0.5em;
 }
 
 .markdown-content h3 {
-  font-size: 1.2em;
+  font-size: 20px;
 }
 
 .markdown-content h4 {
-  font-size: 1.1em;
+  font-size: 18px;
 }
 
 .markdown-content h5 {
-  font-size: 1.1em;
+  font-size: 18px;
 }
 
 .markdown-content h6 {
-  font-size: 1.1em;
+  font-size: 18px;
   color: #b3b3b3; /* 暗色模式下的小标题颜色 */
 }
 
@@ -125,7 +125,7 @@
   overflow: auto;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   table-layout: auto;
-  display: block;
+  //display: block;
 }
 
 .fullstack-page .markdown-content table {
@@ -452,7 +452,7 @@
     overflow: auto;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     table-layout: auto;
-    display: block;
+    //display: block;
   }
 
   .markdown-content th,

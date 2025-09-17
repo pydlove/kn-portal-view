@@ -23,7 +23,6 @@ const scrollToTop = () => {
 
 <style scoped>
 .fullstack-page .tool-icon {
-  background: #ffffff;
 }
 
 .fullstack-page.light-theme .tool-icon {
@@ -49,8 +48,6 @@ const scrollToTop = () => {
 
 /* 工具图标样式 */
 .tool-icon {
-  width: 40px;
-  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -61,13 +58,17 @@ const scrollToTop = () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.tool-icon:hover {
-  background-color: #40a9ff;
+.fullstack-page  .tool-icon:hover {
+  background-color: #ffffff;
+}
+
+.fullstack-page.light-theme  .tool-icon:hover {
+  background-color: #bae0ff;
 }
 
 .top-icon {
-  width: 30px;
-  height: 30px;
+  width: 42px;
+  height: 42px;
   object-fit: contain;
 }
 </style>
