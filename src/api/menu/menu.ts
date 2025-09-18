@@ -2,7 +2,7 @@
 import request from '../../utils/request'
 
 // 获取菜单列表
-export function getMenuPage(data: {pageNum: number; pageSize: number}) {
+export function getMenuPage(data: {menuName: string, pageNum: number; pageSize: number}) {
   return request({
     url: '/menus/page',
     data,

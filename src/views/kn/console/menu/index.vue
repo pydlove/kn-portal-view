@@ -143,6 +143,7 @@ const fetchData = async (current?: number, pageSize?: number) => {
     const pageSizeValue = pageSize || pagination.value.pageSize
 
     const res: any = await getMenuPage({
+      menuName: searchValue.value,
       pageNum: pageNum,
       pageSize: pageSizeValue
     })
