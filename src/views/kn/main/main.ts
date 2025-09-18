@@ -1,12 +1,12 @@
 // main.ts
 import {Router} from "vue-router";
 
-export const goToMainPage = (router: Router, rootMenuId: number, type: string) => {
+export const goToMainPage = (router: Router, rootMenuId: number, type: string, selectFirst: boolean = true) => {
   router.push({
     name: 'main',
     query: {
       menuId: rootMenuId,
-      selectFirst: 'true',
+      selectFirst: selectFirst,
       time: new Date().getTime(),
       type: type
     }

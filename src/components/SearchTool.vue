@@ -10,7 +10,7 @@
           class="search-input"
           placeholder="输入关键词搜索..."
           @input="handleSearch"
-          @keydown.enter="selectResult"
+          @keydown.enter="handleEnterKey"
           @keydown.esc="closeSearchModal"
           @keydown.down.prevent="navigateResults(1)"
           @keydown.up.prevent="navigateResults(-1)"
@@ -31,11 +31,12 @@
           @click="selectResult(result)"
         >
           <div class="result-title">{{ result.title }}</div>
-          <div class="result-content">{{ result.content }}</div>
+          <div class="result-content">{{ formatContent(result.content) }}</div>
         </div>
 
         <!-- 显示更多按钮 -->
-        <div v-if="searchResults.length < totalResults" class="load-more" @click="loadMoreResults">
+        <div v-if="searchResults.length < totalResults" class="load-more"
+             @click="loadMoreResults">
           显示更多结果 ({{ totalResults - searchResults.length }} 个剩余)
         </div>
       </div>
@@ -66,9 +67,43 @@ const searchResults = ref<SearchResult[]>([])
 const selectedIndex = ref(-1)
 const searchInput = ref<HTMLInputElement | null>(null)
 const currentPage = ref(1)
-const pageSize = ref(2)
+const pageSize = ref(5)
 const totalResults = ref(0)
 const isLoading = ref(false)
+
+// 格式化内容，去除Markdown标记
+const formatContent = (content: string) => {
+  if (!content) return '';
+
+  // 去除常见的Markdown标记
+  return content
+    // 去除代码块标记
+    .replace(/[\s\S]*?/g, '')
+    // 去除行内代码标记
+    .replace(/`[^`]*`/g, '')
+    // 去除链接标记 [text](url)
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    // 去除图片标记 ![alt](url)
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '')
+    // 去除粗体标记
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    // 去除斜体标记
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/_(.*?)_/g, '$1')
+    // 去除标题标记
+    .replace(/^#+\s*/gm, '')
+    // 去除引用标记
+    .replace(/^>\s*/gm, '')
+    // 去除分割线
+    .replace(/^\s*[-*_]{3,}\s*$/gm, '')
+    // 去除多余的空白字符
+    .replace(/\s+/g, ' ')
+    // 去除行首行尾空格
+    .trim()
+    // 截取前100个字符并添加省略号
+    .substring(0, 100) + (content.length > 100 ? '...' : '');
+}
 
 // 打开搜索模态框
 const openSearchModal = () => {
@@ -119,11 +154,21 @@ const handleSearch = async () => {
 
 // 定义事件发射器
 const emit = defineEmits<{
-  (e: 'handleSelectMenu', rootMenuId: number, type: string): void
+  (e: 'handleSelectMenu', rootMenuId: number, type: string, selectFirst: boolean): void
 }>()
 
-// 选择搜索结果
+// 处理键盘回车事件
+const handleEnterKey = () => {
+  // 如果有选中的结果，则选择该结果
+  if (selectedIndex.value >= 0 && searchResults.value.length > 0) {
+    console.log('通过键盘回车选择搜索结果:', searchResults.value[selectedIndex.value])
+    selectResult(searchResults.value[selectedIndex.value])
+  }
+}
+
+// 选择搜索结果（通过点击或键盘回车）
 const selectResult = (result: any) => {
+  if (!result) return
 
   const articleInfo = {
     rootMenuId: result.rootMenuId,
@@ -133,17 +178,9 @@ const selectResult = (result: any) => {
   };
   sessionStorage.setItem('selectedArticle', JSON.stringify(articleInfo));
 
-  if (result) {
-    // 发射事件，将 menuId 传递给父组件
-    emit('handleSelectMenu', result.rootMenuId, 'search')
-    closeSearchModal()
-  } else if (selectedIndex.value >= 0 && searchResults.value.length > 0) {
-    // 使用键盘选择的结果
-    const selectedResult = searchResults.value[selectedIndex.value]
-    // 发射事件，将 menuId 传递给父组件
-    emit('handleSelectMenu', selectedResult.rootMenuId, 'search')
-    closeSearchModal()
-  }
+  console.log('通过点击选择搜索结果:', result)
+  emit('handleSelectMenu', result.rootMenuId, 'search', false)
+  closeSearchModal()
 }
 
 // 加载更多结果
@@ -187,20 +224,17 @@ onBeforeUnmount(() => {
 })
 
 onMounted(() => {
-
   // 添加键盘事件监听器
   window.addEventListener('keydown', handleKeyDown)
-
 })
 
 defineExpose({
   openSearchModal
 })
-
 </script>
 
 <style scoped>
-
+/* 样式部分保持不变 */
 .loading {
   padding: 20px;
   text-align: center;
@@ -397,7 +431,6 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
-
   .search-modal {
     padding-top: 50px;
   }

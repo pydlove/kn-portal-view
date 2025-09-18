@@ -3,12 +3,12 @@
   <a-layout-header class="app-header">
     <!-- Theme Toggle Button -->
     <div class="theme-toggle" @click="toggleTheme">
-      {{ isLightTheme ? '🌙 暗色模式' : '☀️ 亮色模式' }}
+      {{ isLightTheme ? '🌙 暗色' : '☀️ 亮色' }}
     </div>
 
     <!-- 搜索按钮 -->
     <div class="search-toggle" @click="doOpenSearchModal">
-      <span>⌕</span>
+      <img class="ss-icon" src="../assets/images/sousuo.png" />
       <span class="search-shortcut">Ctrl+K</span>
     </div>
 
@@ -122,12 +122,12 @@ const resetMobileState = () => {
 }
 
 // 处理搜索结果选择事件
-const handleSelectMenu = (rootMenuId, type) => {
+const handleSelectMenu = (rootMenuId, type, selectFirst) => {
 
   // 切换菜单
   currentActiveMenuId.value = rootMenuId
 
-  goToMainPage(router, rootMenuId, type)
+  goToMainPage(router, rootMenuId, type, selectFirst)
 
   resetMobileState()
 }
@@ -243,6 +243,12 @@ defineExpose({
 </script>
 
 <style scoped>
+
+.ss-icon{
+  width: 18px;
+  height: 18px;
+}
+
 .app-header {
   position: fixed;
   top: 0;
@@ -409,7 +415,7 @@ defineExpose({
 .search-toggle {
   position: fixed;
   top: 20px;
-  right: 120px;
+  right: 90px;
   padding: 6px 10px;
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 20px;
@@ -428,7 +434,7 @@ defineExpose({
 }
 
 .search-shortcut {
-  font-size: 12px;
+  font-size: 14px;
   opacity: 0.7;
 }
 
@@ -456,7 +462,7 @@ defineExpose({
 
   .search-toggle {
     position: fixed;
-    top: 8px;
+    top: 20px;
     left: 70px;
     font-size: 12px;
     width: 45px;
@@ -464,6 +470,7 @@ defineExpose({
     border-radius: 50%;
     display: unset;
     padding: unset;
+    background-color: unset;
   }
 
   .search-toggle span {

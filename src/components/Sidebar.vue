@@ -29,7 +29,7 @@
           <li v-for="menu in articleMenuList" :key="menu.menuId" class="mb-menu-item">
             <a
               href="#"
-              @click.prevent="toggleMenu(menu.menuId)"
+              @click.prevent="doToggleMenu(menu.menuId)"
               :class="{ active: isActiveMenu(menu.menuId) }"
               :title="menu.menuName"
             >
@@ -68,7 +68,7 @@
           <li v-for="menu in articleMenuList" :key="menu.menuId" class="menu-item">
             <a
               href="#"
-              @click.prevent="toggleMenu(menu.menuId)"
+              @click.prevent="doToggleMenu(menu.menuId)"
               :class="{ active: isActiveMenu(menu.menuId) }"
               :title="menu.menuName"
             >
@@ -171,10 +171,9 @@ const fetchMenuData = async () => {
   }
 }
 
-// 切换菜单展开/收起
-const toggleMenu = (menuId: number) => {
+const doToggleMenuCore = (menuId: number) => {
+
   const isCurrentlyExpanded = isExpanded.value[menuId];
-  console.log('toggleMenu', menuId, isCurrentlyExpanded)
 
   // 先关闭所有菜单
   Object.keys(isExpanded.value).forEach(key => {
@@ -184,6 +183,36 @@ const toggleMenu = (menuId: number) => {
   // 如果之前是收起状态，则展开当前菜单
   // 如果之前是展开状态，则保持收起（允许手动收起）
   if (!isCurrentlyExpanded) {
+    isExpanded.value[menuId] = true;
+  }
+
+  return isCurrentlyExpanded;
+}
+
+// 切换菜单展开/收起
+const doToggleMenu = (menuId: number) => {
+  doToggleMenuCore(menuId)
+}
+
+const toggleMenu = (menuId: number, isWait: boolean = false) => {
+
+  if (isWait) {
+    setTimeout(() => {
+      if (articleMenuList.value && articleMenuList.value.length > 0) {
+        afterDoToggleMenuCore(menuId)
+      } else {
+        toggleMenu(menuId, true)
+      }
+    }, 100);
+  } else {
+    afterDoToggleMenuCore(menuId)
+  }
+}
+
+const afterDoToggleMenuCore = (menuId: number) => {
+
+  let isCurrentlyExpanded = doToggleMenuCore(menuId)
+  if (isCurrentlyExpanded) {
     isExpanded.value[menuId] = true;
   }
 }
@@ -204,7 +233,7 @@ const emit = defineEmits<{
 }>()
 
 // 处理文章点击
-const handleArticleClick = (article: TitleItem, isToggleMenu: boolean = false) => {
+const handleArticleClick = (article: TitleItem, isToggleMenu: boolean = false, isWait: boolean = false) => {
 
   if (isMobile.value) {
     toggleSidebar()
@@ -213,7 +242,7 @@ const handleArticleClick = (article: TitleItem, isToggleMenu: boolean = false) =
   activeArticleId.value = article.articleId // 设置当前选中的文章ID
 
   if (isToggleMenu) {
-    toggleMenu(article.menuId)
+    toggleMenu(article.menuId, isWait)
   }
 
   emit('handleArticleSelected', article)
@@ -224,7 +253,7 @@ const checkHasSelectedArticle = () => {
   if (storedArticle) {
     const article = JSON.parse(storedArticle);
 
-    handleArticleClick(article, true);
+    handleArticleClick(article, true, true);
   }
 }
 

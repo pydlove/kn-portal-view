@@ -61,27 +61,65 @@
         </div>
 
         <div class="toc-container">
-          <!-- 显示文章的目录 -->
-          <div class="toc-header">文章目录</div>
-          <div v-if="tocList.length > 0" class="toc-content">
-            <ul class="toc-list">
-              <li
-                v-for="item in tocList"
-                :key="item.id"
-                :class="['toc-item', `toc-level-${item.level}`]"
+
+          <!-- 翻页式Banner -->
+          <div class="cloud-banner-wrapper" @click="goToCurrentBanner">
+            <div class="cloud-banner-title">
+              <span class="cloud-banner-red">【双11】</span>
+              <span>腾讯云服务器本站读者专享</span>
+            </div>
+            <div class="cloud-banner-container">
+              <div
+                class="cloud-banner-slide"
+                v-for="(banner, index) in cloudBanners"
+                :key="index"
+                :class="{ 'active': index === currentBannerIndex }"
               >
-                <a
-                  href="javascript:void(0)"
-                  @click.prevent="scrollToSection(item.title)"
-                  :title="item.title"
-                >
-                  {{ truncateText(item.title, 15) }}
-                </a>
-              </li>
-            </ul>
+                <img :src="banner.image" :alt="banner.title" class="cloud-icon"/>
+                <div class="cloud-banner-text">
+                  <div class="banner-title">{{ banner.title }}</div>
+                  <div class="banner-subtitle">{{ banner.subtitle }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 指示器 -->
+            <div class="banner-indicators" v-if="cloudBanners.length > 1">
+              <span
+                v-for="(banner, index) in cloudBanners"
+                :key="index"
+                class="indicator"
+                :class="{ 'active': index === currentBannerIndex }"
+                @click.stop="setCurrentBannerIndex(index)"
+              ></span>
+            </div>
           </div>
-          <div v-else class="empty-toc">
-            暂无目录
+
+          <div>
+            <!-- 显示文章的目录 -->
+            <div class="toc-header">文章目录</div>
+            <div class="toc-wrapper">
+              <div v-if="tocList.length > 0" class="toc-content">
+                <ul class="toc-list">
+                  <li
+                    v-for="item in tocList"
+                    :key="item.id"
+                    :class="['toc-item', `toc-level-${item.level}`]"
+                  >
+                    <a
+                      href="javascript:void(0)"
+                      @click.prevent="scrollToSection(item.title)"
+                      :title="item.title"
+                    >
+                      {{ truncateText(item.title, 15) }}
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div v-else class="empty-toc">
+                暂无目录
+              </div>
+            </div>
           </div>
         </div>
 
@@ -132,6 +170,68 @@ const route = useRoute()
 const menuId = ref<number>(route.query.menuId || null)
 const tocList = ref<Array<{ id: string, title: string, level: number }>>([])
 const articleContent = ref<ArticleVO>({} as ArticleVO)
+
+const cloudBanners = ref<Array<{
+  title: string;
+  subtitle: string;
+  image: string;
+  link: string;
+}>>([]);
+
+// 当前Banner索引
+const currentBannerIndex = ref(0);
+
+// 鼠标是否悬停在Banner上
+const isBannerHovered = ref(false);
+
+// 生成滚动Banner副本
+const bannerSlides = computed(() => {
+  // 创建两倍数量的Banner副本用于无缝滚动
+  return [...cloudBanners.value, ...cloudBanners.value];
+});
+
+import txCloudImage from '../../../assets/images/cloud/tx_475_250.png';
+import txAiCloudImage from '../../../assets/images/cloud/tx_ai_960_540.png';
+import imCloudImage from '../../../assets/images/cloud/im.png';
+
+const initCloudBanners = () => {
+  // 可以从配置文件、API或环境变量中获取
+  cloudBanners.value = [
+    {
+      title: '腾讯云服务器限时优惠',
+      subtitle: '高性能云服务器，低至￥99/年',
+      image: txCloudImage,
+      link: 'https://curl.qcloud.com/H9ROhsBA'
+    },
+    {
+      title: '【腾讯云】AI 驱动 · 智领未来',
+      subtitle: '4核4G3M云服务器低至 79元/年',
+      image: txAiCloudImage,
+      link: 'https://curl.qcloud.com/t4hW6ANm'
+    },
+    {
+      title: '【腾讯云】语音识别准确率高',
+      subtitle: '限时特惠，最低14.9元起',
+      image: imCloudImage,
+      link: 'https://curl.qcloud.com/ftUqNHzA'
+    }
+  ];
+};
+
+// 跳转到当前Banner链接
+const goToCurrentBanner = () => {
+  if (cloudBanners.value.length > 0) {
+    const currentBanner = cloudBanners.value[currentBannerIndex.value];
+    if (currentBanner.link) {
+      window.open(currentBanner.link, '_blank');
+    }
+  }
+};
+
+// 设置当前Banner索引
+const setCurrentBannerIndex = (index: number) => {
+  currentBannerIndex.value = index;
+};
 
 // 控制侧边栏显示/隐藏的状态
 const isSidebarHidden = ref(false)
@@ -191,7 +291,9 @@ const generateTOC = (markdown: string) => {
 
 // 滚动到指定章节
 const scrollToSection = (id: string) => {
-  const element = document.getElementById(id)
+
+  let newId = id.replace(/\*\*/g, '').trim();
+  const element = document.getElementById(newId)
   if (element) {
     // 添加平滑滚动效果
     element.scrollIntoView({
@@ -248,6 +350,7 @@ const checkFirstArticle = () => {
 onMounted(() => {
 
   checkIsMobile()
+  initCloudBanners()
 
   mermaid.initialize({
     startOnLoad: true,
@@ -259,6 +362,11 @@ onMounted(() => {
     doMenuChange()
   })
 
+  setInterval(() => {
+    if (!isBannerHovered.value && cloudBanners.value.length > 0) {
+      currentBannerIndex.value = (currentBannerIndex.value + 1) % cloudBanners.value.length;
+    }
+  }, 3000); // 每3秒切换一次
 })
 
 const doMenuChange = () => {
@@ -329,7 +437,7 @@ renderer.code = function ({text, lang, escaped}: {
 
   // 处理XML文档代码块
   if (lang === 'xml' || lang === 'xml-doc') {
-    console.log('XML文档代码块',  text)
+    console.log('XML文档代码块', text)
 
     const safeText = text.replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -406,6 +514,132 @@ watch(renderedMarkdown, () => {
 </script>
 
 <style scoped>
+
+.cloud-banner-red {
+  color: red;
+}
+
+.cloud-banner-title {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+/* 翻页式Banner样式 */
+.cloud-banner-wrapper {
+  margin: 15px;
+  padding: 8px;
+  background: linear-gradient(135deg, #006eff, #0052cc);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 110, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  height: 200px;
+}
+
+.cloud-banner-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.cloud-banner-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  transform: translateZ(0); /* 启用硬件加速 */
+  flex-direction: column;
+}
+
+.cloud-banner-slide.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.cloud-icon {
+  width: 200px;
+  height: 105px;
+  max-height: 105px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.cloud-banner-text {
+  flex: 1;
+  color: white;
+  text-align: center;
+  margin: 0 10px;
+  min-width: 0;
+  margin-top: 10px;
+}
+
+.banner-title {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.banner-subtitle {
+  font-size: 10px;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cloud-banner-arrow {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: white;
+  margin-left: 5px;
+}
+
+/* 指示器样式 */
+.banner-indicators {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.indicator.active {
+  background-color: white;
+}
+
+.fullstack-page .cloud-banner-wrapper {
+  background: linear-gradient(135deg, #0052cc, #003da6);
+}
+
+.fullstack-page.light-theme .cloud-banner-wrapper {
+  background: linear-gradient(135deg, #006eff, #0052cc);
+}
+
 .fullstack-page .toc-container {
   color: #ffffff;
   background-color: #31383f;
@@ -473,7 +707,7 @@ watch(renderedMarkdown, () => {
 
 .article-title {
   text-align: left;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   margin: 0 0 20px 0;
   padding: 25px 30px;
@@ -536,11 +770,15 @@ watch(renderedMarkdown, () => {
 }
 
 .toc-container {
-  max-width: 250px;
-  min-width: 250px;
-  overflow-y: auto;
+  max-width: 270px;
+  min-width: 270px;
   background-color: #f8f9fa;
   border-left: 1px solid rgba(255, 255, 255, 0.1)
+}
+
+.toc-wrapper {
+  overflow-y: auto;
+  height: calc(100Vh - 425px);
 }
 
 .fullstack-page.light-theme .toc-header {

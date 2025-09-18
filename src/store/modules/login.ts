@@ -116,20 +116,11 @@ export const useLoginStore = defineStore(
       jumpToLogin()
     }
 
-    // Jump to SSO page
-    // const jumpToSso = () => {
-    //   router.push({
-    //     path: '/sso'
-    //   })
-    //   clearLoginStatus()
-    // }
-
     const jumpToLogin = () => {
       clearLoginStatus()
       router.push({
         path: '/login'
       })
-
     }
     const jumpToNoAuth = () => {
       router.push({
@@ -149,7 +140,6 @@ export const useLoginStore = defineStore(
       logout,
       setToken,
       clearLoginStatus,
-      jumpToLogin,
       jumpToNoAuth,
       // jumpToSso,
       // sso

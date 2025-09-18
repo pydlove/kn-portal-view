@@ -28,11 +28,6 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
     name: 'main',
     component: () => import('@/views/kn/main/index.vue')
   },
-  {
-    path: '/test',
-    name: 'test',
-    component: () => import('@/views/test/index.vue')
-  },
 
   {
     path: '/noAuth',

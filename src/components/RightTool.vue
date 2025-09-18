@@ -3,7 +3,8 @@
   <div class="tool-container">
 
     <!-- 手机看按钮 - 添加二维码展示 -->
-    <div class="rt-tool-item" @click="showPhoneCode" @mouseenter="showQRCode" @mouseleave="hideQRCode">
+    <div class="rt-tool-item" @click="showPhoneCode" @mouseenter="showQRCode"
+         @mouseleave="hideQRCode">
       <div class="tool-icon">
         <img
           src="../assets/images/phone.png"
@@ -15,7 +16,7 @@
       <!-- 二维码弹窗 -->
       <div v-show="showQR" class="qr-code-popup">
         <div class="qr-code-container">
-          <img :src="qrCodeUrl" alt="二维码" class="qr-code-image" />
+          <img :src="qrCodeUrl" alt="二维码" class="qr-code-image"/>
           <div class="qr-code-text">扫描二维码访问移动端</div>
         </div>
       </div>
@@ -48,6 +49,58 @@
       <span>{{ isSidebarHidden ? '打开左边栏' : '关闭左边栏' }}</span>
     </div>
 
+    <!-- 新增交流圈按钮 -->
+    <div class="rt-tool-item" @mouseenter="showWechatQRCode"
+         @mouseleave="hideWechatQRCode">
+      <div class="tool-icon">
+        <img
+          src="../assets/images/wechat.png"
+          alt="交流圈"
+          class="top-icon"
+        />
+      </div>
+      <span>交流圈</span>
+
+      <!-- 微信二维码弹窗 -->
+      <div v-show="showWechatQR" class="qr-code-popup wechat-popup">
+        <div class="qr-code-container">
+          <img src="../assets/images/wechat.jpg" alt="微信二维码" class="wx-code-image"/>
+          <div class="qr-code-text">扫码加入交流圈【无任何套路】</div>
+          <div class="wechat-notes">
+            <p>添加时请备注：Momo java</p>
+            <p>我会尽快通过您的申请</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新增赞赏支持按钮 -->
+    <div class="rt-tool-item" @mouseenter="showRewardCode"
+         @mouseleave="handleRewardMouseLeave" @click="getToPage">
+      <div class="tool-icon">
+        <img
+          src="../assets/images/zanshang.png"
+          alt="赞赏支持"
+          class="top-icon"
+        />
+      </div>
+      <span>赞赏支持</span>
+
+      <!-- 收款码弹窗 -->
+      <div v-show="showReward" class="qr-code-popup reward-popup">
+        <div class="qr-code-container">
+          <img src="../assets/images/zanshangcode.png" alt="收款码"
+               class="reward-code-image"/>
+          <div class="qr-code-text">感谢您的支持</div>
+          <div class="reward-notes">
+            <p>
+              如果文章对你有帮助，欢迎扫描下方赞赏码请我喝杯咖啡☕️～你的支持是我持续分享的动力！</p>
+            <p>(点击“赞赏支持”可以查看赞赏名单)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 返回顶部按钮 -->
     <ReturnTop @scrollToTop="scrollToTop"/>
 
@@ -63,6 +116,8 @@ import fullScreenIcon from '../assets/images/fullscreen.png';
 import exitFullScreenIcon from '../assets/images/fullScreen.png';
 import topIcon from '../assets/images/top.png';
 import ReturnTop from '../components/ReturnTop.vue'
+import {goToMainPage, setStorageArticle} from "@/views/kn/main/main";
+import router from "@/router";
 
 const isSidebarHidden = ref(false)
 const isFullScreen = ref(false)
@@ -71,6 +126,44 @@ const qrCodeUrl = ref('') // 二维码图片URL
 const mobileUrl = ref('') // 移动端链接地址
 
 const emit = defineEmits(['toggleSidebar', 'scrollToTop'])
+
+const showWechatQR = ref(false);
+const showReward = ref(false);
+let rewardHideTimer: number | null = null;
+
+const getToPage = () => {
+  setStorageArticle(1138, 1144, 175, "关于赞善的用途")
+  goToMainPage(router, 1138, 'search')
+}
+
+// 显示赞赏码
+const showRewardCode = () => {
+  // 如果已有定时器，先清除它
+  if (rewardHideTimer) {
+    clearTimeout(rewardHideTimer);
+    rewardHideTimer = null;
+  }
+  showReward.value = true;
+};
+
+// 处理赞赏码鼠标离开事件
+const handleRewardMouseLeave = () => {
+  // 设置延迟隐藏定时器（3秒后隐藏）
+  rewardHideTimer = window.setTimeout(() => {
+    showReward.value = false;
+    rewardHideTimer = null;
+  }, 3000);
+};
+
+// 显示微信二维码
+const showWechatQRCode = () => {
+  showWechatQR.value = true;
+};
+
+// 隐藏微信二维码
+const hideWechatQRCode = () => {
+  showWechatQR.value = false;
+};
 
 // 切换侧边栏显示/隐藏
 const toggleSidebar = () => {
@@ -133,6 +226,56 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+
+.reward-code-image {
+  width: 150px;
+  height: 150px;
+}
+
+/* 赞赏码弹窗样式 */
+.reward-popup {
+  right: 80px;
+  top: 320px; /* 调整位置避免与其他弹窗重叠 */
+}
+
+.wechat-notes,
+.reward-notes {
+  font-size: 12px;
+  color: #ff6600;
+  margin-top: 10px;
+  text-align: left;
+}
+
+.wechat-notes p,
+.reward-notes p {
+  margin: 5px 0;
+}
+
+.wx-code-image {
+  width: 160px;
+  height: 190px;
+}
+
+/* 微信二维码弹窗样式 */
+.wechat-popup {
+  right: 80px;
+  top: 200px; /* 调整位置避免与手机看二维码重叠 */
+}
+
+.wechat-notes {
+  font-size: 12px;
+  color: #ff6600;
+  margin-top: 10px;
+  text-align: left;
+}
+
+.wechat-notes p {
+  margin: 5px 0;
+}
+
+.fullstack-page .wechat-notes {
+  color: #ffcc66;
+}
 
 /* 二维码弹窗样式 */
 .qr-code-popup {
