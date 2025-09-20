@@ -13,8 +13,7 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
   {
     path: '/',
     name: 'root',
-    meta: {hideHeader: false},
-    component: import('@/views/kn/home/index.vue')
+    redirect: '/home',
   },
 
   {

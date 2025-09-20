@@ -4,13 +4,13 @@
     <!-- Banner 区域 -->
     <section class="banner">
       <div class="banner-content">
-        <h1 class="banner-title">Java 全栈知识体系</h1>
+        <h1 class="banner-title">欢迎来到 Java 技术小窝</h1>
         <p class="banner-subtitle">
-          一站式 Java 技术学习平台，从基础到高级，构建完整的知识体系，拒绝碎片化学习
+          一站式 Java 技术学习平台，从基础到高级，构建完整的知识体系，帮你了解系统化的进阶路径
         </p>
         <div class="banner-actions">
           <button class="btn btn-primary" @click="goToLearning">开始学习</button>
-          <button class="btn btn-secondary" @click="goToAbout">了解更多</button>
+          <button class="btn btn-secondary" @click="goToAbout">关于本站</button>
         </div>
         <!-- 添加向下滚动提示 -->
         <div class="scroll-down" @click="scrollToContent">
@@ -109,7 +109,7 @@ const goToLearning = () => {
 }
 
 const goToAbout = () => {
-  goToMainPage(router, 1, 'menu')
+  goToMainPage(router, 1138, 'menu')
 }
 
 const goToFullStack = () => {

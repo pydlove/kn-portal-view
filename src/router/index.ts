@@ -5,7 +5,7 @@ import type { App } from 'vue'
 import { createRouterGuards } from './guards'
 // console.log(import.meta.env.BASE_URL, 'meta.env.BASE_URL')
 export const router = createRouter({
-  history: createWebHistory('/data-cc'),
+  history: createWebHistory('/cc'),
   routes: basicRoutes
 })
 
