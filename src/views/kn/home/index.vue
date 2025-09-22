@@ -1,6 +1,7 @@
 <!-- src/views/kn/home/index.vue -->
 <template>
   <div class="home-container">
+
     <!-- Banner 区域 -->
     <section class="banner">
       <div class="banner-content">
@@ -20,6 +21,30 @@
       <div class="banner-overlay"></div>
       <!-- Main Content -->
       <div v-if="isMobile" class="mb-start-line"></div>
+    </section>
+
+    <!-- 在 Banner 区域后，main-content 之前添加 -->
+    <section v-if="!isMobile" class="user-guide">
+      <div class="guide-container">
+        <h2 class="guide-title">快速开始</h2>
+        <div class="guide-steps">
+          <div class="guide-step" @click="goToLearning">
+            <div class="step-icon">1</div>
+            <h3>学习知识</h3>
+            <p>系统化学习Java全栈技术</p>
+          </div>
+          <div class="guide-step" @click="goToTemplates">
+            <div class="step-icon">2</div>
+            <h3>进阶路线</h3>
+            <p>构建系统化进阶路径</p>
+          </div>
+          <div class="guide-step" @click="openMockInterview">
+            <div class="step-icon">3</div>
+            <h3>模拟面试</h3>
+            <p>实战演练，提升面试技能</p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <main class="main-content">
@@ -87,18 +112,31 @@
     <Footer/>
 
     <ReturnTop @scrollToTop="scrollToTop"/>
+    <MockInterview v-model:visible="showMockInterview" />
   </div>
 </template>
 
 <script setup lang="ts">
 import {useRouter} from 'vue-router'
-import {onMounted, onBeforeUnmount} from 'vue'
+import {onMounted, onBeforeUnmount, ref} from 'vue'
 import Footer from '../../../components/Footer.vue'
 import ReturnTop from '../../../components/ReturnTop.vue'
 import {doScrollToTop, isMobile} from "@/utils/util";
 import {goToMainPage} from "@/views/kn/main/main";
+import {inject} from "vitest";
+import MockInterview from "@/components/interview/MockInterview.vue";
 
 const router = useRouter()
+
+const showMockInterview = ref(false);
+
+const openMockInterview = () => {
+  showMockInterview.value = true;
+};
+
+const goToTemplates = () => {
+  goToMainPage(router, 4, 'menu')
+}
 
 const scrollToTop = () => {
   doScrollToTop('.home-container')
@@ -141,6 +179,100 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* 用户使用导航样式 */
+.user-guide {
+  background: linear-gradient(135deg, #f0f2f5 0%, #ffffff 100%);
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.guide-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.guide-title {
+  font-size: 2rem;
+  color: #096dd9;
+  margin-bottom: 40px;
+  font-weight: 600;
+}
+
+.guide-steps {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.guide-step {
+  flex: 1;
+  max-width: 300px;
+  min-width: 250px;
+  background: white;
+  border-radius: 12px;
+  padding: 30px 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.guide-step:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.step-icon {
+  width: 50px;
+  height: 50px;
+  background: #096dd9;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 auto 20px;
+}
+
+.guide-step h3 {
+  font-size: 1.4rem;
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.guide-step p {
+  color: #7f8c8d;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .user-guide {
+    padding: 40px 15px;
+  }
+
+  .guide-title {
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+  }
+
+  .guide-steps {
+    gap: 20px;
+  }
+
+  .guide-step {
+    min-width: 100%;
+    padding: 20px 15px;
+  }
+
+  .guide-step h3 {
+    font-size: 1.2rem;
+  }
+}
+
 .home-container {
   min-height: 100vh;
   overflow: auto;
@@ -150,8 +282,8 @@ onBeforeUnmount(() => {
 /* Banner 样式 */
 .banner {
   position: relative;
-  height: 100vh;
-  min-height: 600px;
+  height: 450px;
+  min-height: 450px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
@@ -190,7 +322,7 @@ onBeforeUnmount(() => {
 
 .scroll-down {
   position: absolute;
-  bottom: -200px;
+  top: 325px;
   left: 50%;
   transform: translateX(-50%);
   cursor: pointer;
@@ -220,7 +352,6 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('https://example.com/banner-pattern.png') center/cover;
   opacity: 0.2;
   z-index: 1;
 }
@@ -361,7 +492,7 @@ onBeforeUnmount(() => {
   }
 
   .banner-title {
-    font-size: 2rem;
+    font-size: 28px;
   }
 
   .banner-subtitle {
@@ -408,7 +539,7 @@ onBeforeUnmount(() => {
   }
 
   .banner-subtitle {
-    font-size: 16px;
+    font-size: 14px;
     line-height: 32px;
   }
 

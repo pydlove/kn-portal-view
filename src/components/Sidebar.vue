@@ -61,42 +61,65 @@
       </div>
     </div>
 
-    <div v-else class="sidebar">
+    <div v-else>
       <div class="sidebar-menu">
-        <ul>
-          <!-- 导航菜单项 -->
-          <li v-for="menu in articleMenuList" :key="menu.menuId" class="menu-item">
-            <a
-              href="#"
-              @click.prevent="doToggleMenu(menu.menuId)"
-              :class="{ active: isActiveMenu(menu.menuId) }"
-              :title="menu.menuName"
-            >
+
+        <!-- 添加收起所有按钮 -->
+        <div class="sidebar-actions">
+
+          <div class="collapse-all-btn" @click="collapseAllMenus">
+            <img src="../assets/images/shouqi.png" alt="">
+          </div>
+
+          <div class="collapse-all-btn" @click="expandAllMenus">
+            <img src="../assets/images/expand_all.png" alt="">
+          </div>
+
+          <div class="collapse-all-btn" @click="locateCurrentArticle">
+            <img src="../assets/images/mubiao.png" alt="">
+          </div>
+
+          <div class="collapse-all-btn" @click="doPcToggleSidebar">
+            <img src="../assets/images/openLeft.png" alt="">
+          </div>
+        </div>
+
+        <div class="sidebar">
+          <ul>
+            <!-- 导航菜单项 -->
+            <li v-for="menu in articleMenuList" :key="menu.menuId" class="menu-item">
+              <a
+                href="#"
+                @click.prevent="doToggleMenu(menu.menuId)"
+                :class="{ active: isActiveMenu(menu.menuId) }"
+                :title="menu.menuName"
+              >
             <span class="menu-icon">
               {{ menu.menuName }}
             </span>
-              <span v-if="menu.articleTitleList && menu.articleTitleList.length > 0"
-                    class="arrow-icon">
+                <span v-if="menu.articleTitleList && menu.articleTitleList.length > 0"
+                      class="arrow-icon">
               {{ isExpanded[menu.menuId] ? '▼' : '▶' }}
             </span>
-            </a>
+              </a>
 
-            <!-- 子元素列表 -->
-            <ul v-if="isExpanded[menu.menuId]" class="submenu">
-              <li v-for="article in menu.articleTitleList" :key="article.articleId"
-                  class="submenu-item">
-                <a
-                  href="#"
-                  @click.prevent="handleArticleClick(article)"
-                  :title="article.title"
-                  :class="{ 'article-active': isActiveArticle(article.articleId) }"
-                >
-                  {{ article.title }}
-                </a>
-              </li>
-            </ul>
-          </li>
-        </ul>
+              <!-- 子元素列表 -->
+              <ul v-if="isExpanded[menu.menuId]" class="submenu">
+                <li v-for="article in menu.articleTitleList" :key="article.articleId"
+                    class="submenu-item">
+                  <a :id="`article-${article.articleId}`"
+                     href="#"
+                     @click.prevent="handleArticleClick(article)"
+                     :title="article.title"
+                     :class="{ 'article-active': isActiveArticle(article.articleId) }"
+                  >
+                    {{ article.title }}
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -118,6 +141,57 @@ const isExpanded = ref<{ [key: number]: boolean }>({}) // 记录每个菜单的�
 const firstArticle = ref<TitleItem>(null) // 记录每个菜单的展开状态
 const activeArticleId = ref<number | null>(null) // 记录当前选中的文章ID
 const isSidebarOpen = ref(false)
+
+const emit = defineEmits<{
+  (e: 'doPcToggleSidebar'): void,
+  (e: 'handleArticleSelected', article: TitleItem): void
+}>()
+
+const doPcToggleSidebar = () => {
+  emit('doPcToggleSidebar')
+}
+
+// 添加收起所有菜单函数
+const collapseAllMenus = () => {
+  Object.keys(isExpanded.value).forEach(key => {
+    isExpanded.value[Number(key)] = false;
+  });
+};
+
+// 添加展开所有菜单函数
+const expandAllMenus = () => {
+  articleMenuList.value.forEach(menu => {
+    isExpanded.value[menu.menuId] = true;
+  });
+};
+
+// 添加定位当前文章函数
+const locateCurrentArticle = () => {
+  // 从缓存中获取当前选中的文章
+  const storedArticle = sessionStorage.getItem('selectedArticle');
+  if (storedArticle) {
+    const article = JSON.parse(storedArticle);
+
+    // 设置当前选中的文章ID
+    activeArticleId.value = article.articleId;
+
+    // 触发文章选中事件
+    emit('handleArticleSelected', article);
+
+    // 展开对应的菜单
+    if (!isExpanded.value[article.menuId]) {
+      isExpanded.value[article.menuId] = true;
+    }
+
+    // 滚动到文章位置
+    setTimeout(() => {
+      const element = document.getElementById(`article-${article.articleId}`);
+      if (element) {
+        element.scrollIntoView({behavior: 'smooth', block: 'center'});
+      }
+    }, 100);
+  }
+};
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
@@ -227,11 +301,6 @@ const isActiveArticle = (articleId: number) => {
   return activeArticleId.value === articleId
 }
 
-// 在 script setup 的顶部添加
-const emit = defineEmits<{
-  (e: 'handleArticleSelected', article: TitleItem): void
-}>()
-
 // 处理文章点击
 const handleArticleClick = (article: TitleItem, isToggleMenu: boolean = false, isWait: boolean = false) => {
 
@@ -282,12 +351,75 @@ defineExpose({
 </script>
 
 <style scoped>
+
+.fullstack-page .sidebar-actions {
+  background-color: #22272e;
+}
+
+.fullstack-page.light-theme .sidebar-actions {
+  background-color: #ffffff;
+  border-right: 1px solid #d9d9d9;
+  border-bottom: 1px solid #d9d9d9;
+  border-top: 1px solid #d9d9d9;
+}
+
+.sidebar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  height: 40px;
+  align-items: center;
+  justify-content: right;
+  padding-right: 10px;
+  position: absolute;
+  width: 100%;
+  z-index: 1;
+}
+
+.collapse-all-btn img {
+  width: 20px;
+  height: 20px;
+}
+
+.collapse-all-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* 添加定位图标样式 */
+.locate-icon {
+  margin-left: 0.5rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  vertical-align: middle;
+}
+
+.locate-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.submenu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.submenu-item a {
+  flex-grow: 1;
+}
+
 /* 基础样式 */
 .sidebar {
   width: 300px;
   transition: all 0.3s ease;
   height: calc(100vh - 120px);
   overflow-y: auto;
+  padding-top: 40px;
 }
 
 .fullstack-page .sidebar {
@@ -316,7 +448,7 @@ defineExpose({
 }
 
 .sidebar-menu {
-  padding: 1rem;
+  position: relative;
 }
 
 .sidebar-menu ul {

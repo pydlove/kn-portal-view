@@ -9,6 +9,7 @@
             addon-before="文章标题"
             v-model:value="queryForm.title"
             placeholder="请输入文章标题"
+            @search="handleQuery"
           />
         </a-col>
         <a-col :span="6">

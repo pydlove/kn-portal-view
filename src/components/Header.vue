@@ -16,7 +16,7 @@
       <!-- 新增 Logo 区域 -->
       <div class="logo-container" @click="goToHome">
         <img
-          src="../assets/images/logo-new.png"
+          src="../assets/images/aiocloud.png"
           :alt="siteName"
           class="logo-image"
         />
@@ -61,6 +61,11 @@
       <!-- Navigation Bar -->
       <nav v-else class="navbar">
         <div class="nav-container">
+          <div class="nav-item dropdown" @click="openMockInterview">
+            <img src="../assets/images/remen.png" class="rm-icon" />
+            <span>模拟面试</span>
+          </div>
+
           <div
             v-for="menu in menuList"
             :key="menu.id"
@@ -79,6 +84,8 @@
     <SearchTool ref="searchToolRef"
                 @handleSelectMenu="handleSelectMenu"
     />
+
+    <MockInterview v-model:visible="showMockInterview" />
   </a-layout-header>
 </template>
 
@@ -90,6 +97,7 @@ import {useGlobalStore} from "../store/modules/global.ts";
 import {checkIsMobile, isMobile} from "../utils/util.ts";
 import SearchTool from "./SearchTool.vue";
 import {goToMainPage} from "../views/kn/main/main.ts";
+import MockInterview from './interview/MockInterview.vue';
 
 const globalStore = useGlobalStore()
 const isLightTheme = ref(false)
@@ -108,6 +116,12 @@ const siteName = ref('Momo Java 技术小窝') // 文字 logo 或网站名称
 const currentActiveMenuId = ref(route.query.menuId || '')
 
 const searchToolRef = ref(null)
+
+const showMockInterview = ref(false);
+
+const openMockInterview = () => {
+  showMockInterview.value = true;
+};
 
 const doOpenSearchModal = () => {
   searchToolRef.value?.openSearchModal()
@@ -238,12 +252,18 @@ const groupChildren = (childrenMenu) => {
 
 // 暴露给父组件使用
 defineExpose({
-  isLightTheme
+  isLightTheme,
+  openMockInterview
 })
+
 </script>
 
 <style scoped>
-
+.rm-icon {
+  width: 36px;
+  height: 36px;
+  margin-right: 5px;
+}
 .ss-icon{
   width: 18px;
   height: 18px;
@@ -278,15 +298,15 @@ defineExpose({
 }
 
 .logo-image {
-  height: 40px;
+  height: 36px;
   width: auto;
   border-radius: 20px;
 }
 
 .logo-text {
   font-weight: bold;
-  font-size: 1.4rem;
-  margin-left: 20px;
+  font-size: 21px;
+  margin-left: 10px;
   min-width: 250px;
 }
 
@@ -337,8 +357,7 @@ defineExpose({
 .nav-item {
   text-decoration: none;
   font-size: 1rem;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
+  padding: 5px 10px;
   position: relative;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   transition: all 0.3s ease;

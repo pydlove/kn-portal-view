@@ -1,7 +1,7 @@
 <!-- src/views/kn/console/menu/EditArticle.vue -->
 <template>
   <a-modal
-    v-model:visible="visible"
+    v-model:open="visible"
     title="编辑菜单"
     @ok="handleSubmit"
     @cancel="handleCancel"

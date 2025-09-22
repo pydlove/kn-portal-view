@@ -1,12 +1,14 @@
 <!-- src/views/kn/console/article/EditArticle.vue -->
 <template>
   <a-modal
-    v-model:visible="modalVisible"
+    v-model:open="modalVisible"
     :title="modalTitle"
     @ok="handleSubmit"
     @cancel="handleCancel"
     :confirm-loading="confirmLoading"
     width="80%"
+    :maskClosable="false"
+    :keyboard="false"
   >
     <a-form
       :model="articleForm"

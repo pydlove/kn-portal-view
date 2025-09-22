@@ -1,12 +1,14 @@
 <!-- src/views/kn/console/article/AddArticleModal.vue -->
 <template>
   <a-modal
-    v-model:visible="visible"
+    v-model:open="visible"
     title="新增文章"
     @ok="handleSubmit"
     @cancel="handleCancel"
     :confirm-loading="confirmLoading"
     width="80%"
+    :maskClosable="false"
+    :keyboard="false"
   >
     <a-form
       :model="formState"

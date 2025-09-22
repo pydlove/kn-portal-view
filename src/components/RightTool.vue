@@ -2,26 +2,6 @@
 <template>
   <div class="tool-container">
 
-    <!-- 手机看按钮 - 添加二维码展示 -->
-    <div class="rt-tool-item" @click="showPhoneCode" @mouseenter="showQRCode"
-         @mouseleave="hideQRCode">
-      <div class="tool-icon">
-        <img
-          src="../assets/images/phone.png"
-          alt="移动端"
-          class="top-icon"
-        />
-      </div>
-      <span>手机看</span>
-      <!-- 二维码弹窗 -->
-      <div v-show="showQR" class="qr-code-popup">
-        <div class="qr-code-container">
-          <img :src="qrCodeUrl" alt="二维码" class="qr-code-image"/>
-          <div class="qr-code-text">扫描二维码访问移动端</div>
-        </div>
-      </div>
-    </div>
-
     <!-- 其他按钮保持不变 -->
     <!-- 全屏切换按钮 -->
     <div class="rt-tool-item" @click="toggleFullScreen"
@@ -49,6 +29,26 @@
       <span>{{ isSidebarHidden ? '打开左边栏' : '关闭左边栏' }}</span>
     </div>
 
+    <!-- 手机看按钮 - 添加二维码展示 -->
+    <div class="rt-tool-item" @click="showPhoneCode" @mouseenter="showQRCode"
+         @mouseleave="hideQRCode">
+      <div class="tool-icon">
+        <img
+          src="../assets/images/phone.png"
+          alt="移动端"
+          class="top-icon"
+        />
+      </div>
+      <span>手机看</span>
+      <!-- 二维码弹窗 -->
+      <div v-show="showQR" class="qr-code-popup">
+        <div class="qr-code-container">
+          <img :src="qrCodeUrl" alt="二维码" class="qr-code-image"/>
+          <div class="qr-code-text">扫描二维码访问移动端</div>
+        </div>
+      </div>
+    </div>
+
     <!-- 新增交流圈按钮 -->
     <div class="rt-tool-item" @mouseenter="showWechatQRCode"
          @mouseleave="hideWechatQRCode">
@@ -65,10 +65,12 @@
       <div v-show="showWechatQR" class="qr-code-popup wechat-popup">
         <div class="qr-code-container">
           <img src="../assets/images/wechat.jpg" alt="微信二维码" class="wx-code-image"/>
-          <div class="qr-code-text">扫码加入交流圈【无任何套路】</div>
+          <div class="qr-code-text">扫一扫，加入我们的技术交流圈</div>
+          <div class="qr-code-text">【无任何套路，纯粹技术分享】</div>
           <div class="wechat-notes">
             <p>添加时请备注：Momo java</p>
             <p>我会尽快通过您的申请</p>
+            <p>期待与您交流！</p>
           </div>
         </div>
       </div>
@@ -87,7 +89,7 @@
       <span>赞赏支持</span>
 
       <!-- 收款码弹窗 -->
-      <div v-show="showReward" class="qr-code-popup reward-popup">
+      <div v-show="showReward" class="qr-code-popup1 reward-popup1">
         <div class="qr-code-container">
           <img src="../assets/images/zanshangcode.png" alt="收款码"
                class="reward-code-image"/>
@@ -101,6 +103,32 @@
       </div>
     </div>
 
+    <!-- 新增反馈按钮 -->
+    <div class="rt-tool-item" @mouseenter="showFeedbackQRCode"
+         @mouseleave="hideFeedbackQRCode">
+      <div class="tool-icon">
+        <img
+          src="../assets/images/fankui.png"
+          alt="反馈"
+          class="top-icon"
+        />
+      </div>
+      <span>反馈建议</span>
+
+      <!-- 反馈二维码弹窗 -->
+      <div v-show="showFeedbackQR" class="qr-code-popup feedback-popup">
+        <div class="qr-code-container">
+          <img src="../assets/images/wechat.jpg" alt="微信二维码" class="wx-code-image"/>
+          <div class="qr-code-text">【扫码反馈】</div>
+          <div class="qr-code-text">人非圣贤，孰能无错</div>
+          <div class="wechat-notes">
+            <p>如果您发现了任何错误或有什么好建议，欢迎扫码反馈</p>
+            <p>我们会认真处理并在站内公示，帮助大家一起进步</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 返回顶部按钮 -->
     <ReturnTop @scrollToTop="scrollToTop"/>
 
@@ -108,13 +136,12 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, onBeforeUnmount} from "vue";
+import {onBeforeUnmount, onMounted, ref} from "vue";
 // 需要准备对应的图标图片
 import openLeftIcon from '../assets/images/openLeft.png';
 import closeLeftIcon from '../assets/images/openLeft.png';
 import fullScreenIcon from '../assets/images/fullscreen.png';
 import exitFullScreenIcon from '../assets/images/fullScreen.png';
-import topIcon from '../assets/images/top.png';
 import ReturnTop from '../components/ReturnTop.vue'
 import {goToMainPage, setStorageArticle} from "@/views/kn/main/main";
 import router from "@/router";
@@ -129,6 +156,7 @@ const emit = defineEmits(['toggleSidebar', 'scrollToTop'])
 
 const showWechatQR = ref(false);
 const showReward = ref(false);
+const showFeedbackQR = ref(false); // 新增反馈弹窗状态
 let rewardHideTimer: number | null = null;
 
 const getToPage = () => {
@@ -152,7 +180,7 @@ const handleRewardMouseLeave = () => {
   rewardHideTimer = window.setTimeout(() => {
     showReward.value = false;
     rewardHideTimer = null;
-  }, 3000);
+  }, 100);
 };
 
 // 显示微信二维码
@@ -163,6 +191,16 @@ const showWechatQRCode = () => {
 // 隐藏微信二维码
 const hideWechatQRCode = () => {
   showWechatQR.value = false;
+};
+
+// 显示反馈二维码
+const showFeedbackQRCode = () => {
+  showFeedbackQR.value = true;
+};
+
+// 隐藏反馈二维码
+const hideFeedbackQRCode = () => {
+  showFeedbackQR.value = false;
 };
 
 // 切换侧边栏显示/隐藏
@@ -179,7 +217,7 @@ const scrollToTop = () => {
 // 显示二维码
 const showQRCode = () => {
   // 设置移动端链接地址（根据你的实际需求修改）
-  mobileUrl.value = 'http://112.124.109.1:9443/data-cc/home' // 替换为实际的移动端链接
+  mobileUrl.value = 'https://101.126.15.58/cc/home' // 替换为实际的移动端链接
 
   // 生成二维码图片URL（这里使用在线二维码生成服务示例）
   // 你可以使用自己的二维码生成服务或预生成的二维码图片
@@ -238,6 +276,9 @@ onBeforeUnmount(() => {
   top: 320px; /* 调整位置避免与其他弹窗重叠 */
 }
 
+.reward-popup1 {
+}
+
 .wechat-notes,
 .reward-notes {
   font-size: 12px;
@@ -259,7 +300,7 @@ onBeforeUnmount(() => {
 /* 微信二维码弹窗样式 */
 .wechat-popup {
   right: 80px;
-  top: 200px; /* 调整位置避免与手机看二维码重叠 */
+  top: 500px;
 }
 
 .wechat-notes {
@@ -281,13 +322,26 @@ onBeforeUnmount(() => {
 .qr-code-popup {
   position: absolute;
   right: 80px; /* 距离右侧工具栏的距离 */
-  top: 0;
+  top: -50px;
   z-index: 1000;
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   padding: 15px;
   min-width: 220px;
+  width: 220px;
+  text-align: center;
+}
+
+.qr-code-popup1 {
+  position: absolute;
+  right: 80px; /* 距离右侧工具栏的距离 */
+  z-index: 1000;
+  background: #2d3748;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  width: 220px;
   text-align: center;
 }
 
@@ -302,6 +356,7 @@ onBeforeUnmount(() => {
   height: 150px;
   margin-bottom: 10px;
   cursor: pointer;
+  z-index: 99999;
 }
 
 .qr-code-text {

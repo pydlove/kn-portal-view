@@ -165,18 +165,18 @@ const navItems = ref<NavItem[]>([
   },
   {
     id: 3,
-    title: '系统设置',
-    description: '配置系统参数和基础信息',
+    title: '问题管理',
+    description: '用于添加、修改、删除问题',
     icon: 'fas fa-cog',
-    path: '/system-settings',
+    path: '/question',
     color: '#36b9cc'
   },
   {
     id: 4,
-    title: '消息中心',
-    description: '查看系统通知和消息',
+    title: '模版管理',
+    description: '用于添加、修改、删除模版',
     icon: 'fas fa-envelope',
-    path: '/message-center',
+    path: '/template',
     color: '#f6c23e'
   },
   {

@@ -57,6 +57,18 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
     name: 'article',
     meta: {hideHeader: true},
     component: () => import('@/views/kn/console/article/index.vue')
+  },
+  {
+    path: '/question',
+    name: 'Question',
+    meta: {hideHeader: true},
+    component: () => import('@/views/kn/console/question/index.vue')
+  },
+  {
+    path: '/template',
+    name: 'Template',
+    meta: {hideHeader: true},
+    component: () => import('@/views/kn/console/template/index.vue'),
   }
 
 ]
