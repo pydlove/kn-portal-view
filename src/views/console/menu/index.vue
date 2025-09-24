@@ -73,7 +73,7 @@ import AddMenuModal from './AddMenu.vue'
 import EditMenuModal from './EditMenu.vue'
 import {message} from 'ant-design-vue'
 import type {KnMenu} from './type'
-import BackToHome from '../../../../components/BackToHome.vue'
+import BackToHome from '../../../components/BackToHome.vue'
 
 const searchValue = ref('')
 const menuList = ref<KnMenu[]>([])

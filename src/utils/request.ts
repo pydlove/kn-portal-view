@@ -4,6 +4,7 @@ import { checkStatus } from './index'
 import { useLoginStoreWithOut } from '@/store/modules/login'
 import { useGlobalStoreWithOut } from '@/store/modules/global'
 import { message } from 'ant-design-vue'
+import { useRouter } from 'vue-router'
 
 interface IApiConfig {
   url: string
@@ -54,6 +55,15 @@ service.interceptors.request.use(
       // promiseArr[config.url] = cancel
     } else {
       promiseArr[config.url] = cancel
+    }
+
+    // Check if current route is ruankao related and modify URL accordingly
+    if (typeof window !== 'undefined' && window.location) {
+      const currentPath = window.location.pathname;
+      // If route is related to ruankao or starts with /rk, prepend 'rk' to the URL
+      if (currentPath.startsWith('/cc/rk')) {
+        config.url = '/rk' + config.url;
+      }
     }
 
     if (['post', 'delete', 'patch', 'put'].includes(config.method.toLocaleLowerCase())) {

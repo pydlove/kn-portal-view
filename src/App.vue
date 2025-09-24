@@ -1,21 +1,26 @@
 <template>
   <ConfigProvider :theme="globalStore.themeConfig">
-    <div :class="['fullstack-page', { 'light-theme': headerRef?.isLightTheme }]">
-      <Header ref="headerRef" v-if="!$route.meta.hideHeader"/>
+    <div :class="['fullstack-page', { 'light-theme': getCurrentTheme }]">
+      <!-- 普通头部：当不在软考路径下且不隐藏头部时显示 -->
+      <Header ref="headerRef" v-if="!isRuankaoRoute && !$route.meta.hideHeader"/>
+      <!-- 软考头部：当在软考路径下且不隐藏头部时显示 -->
+      <RkHeader ref="rkHeaderRef" v-if="isRuankaoRoute && !$route.meta.hideHeader"/>
       <div>
         <RouterView
-          :class="['app-main', 'fullstack-page', { 'light-theme': headerRef?.isLightTheme }]"/>
+          :class="['app-main', 'fullstack-page', { 'light-theme': getCurrentTheme }]"/>
       </div>
     </div>
   </ConfigProvider>
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from 'vue'
+import {ref, computed} from 'vue'
+import {useRoute} from 'vue-router'
 import {RouterView} from 'vue-router'
 import {ConfigProvider} from 'ant-design-vue'
 import {useGlobalStore} from '@/store/modules/global'
 import Header from './components/Header.vue';
+import RkHeader from './components/ruankao/RkHeader.vue';
 import type {ComponentPublicInstance} from 'vue'
 
 interface HeaderInstance extends ComponentPublicInstance {
@@ -23,9 +28,28 @@ interface HeaderInstance extends ComponentPublicInstance {
 }
 
 const globalStore = useGlobalStore()
+const route = useRoute()
 const mainContainer = ref<HTMLElement | null>(null)
 const headerRef = ref<HeaderInstance | null>(null)
+const rkHeaderRef = ref<HeaderInstance | null>(null)
 
+// 判断当前是否为软考路由
+const isRuankaoRoute = computed(() => {
+  return route.path.startsWith('/rk')
+})
+
+// 获取当前主题模式
+const getCurrentTheme = computed(() => {
+  if (isRuankaoRoute.value && rkHeaderRef.value) {
+    return rkHeaderRef.value.isLightTheme
+  } else if (headerRef.value) {
+    return headerRef.value.isLightTheme
+  }
+  return false
+})
+
+// 保持原有的 onMounted 逻辑
+import {onMounted} from 'vue'
 onMounted(() => {
   if (mainContainer.value) {
     mainContainer.value.style.height = `${window.innerHeight}px`

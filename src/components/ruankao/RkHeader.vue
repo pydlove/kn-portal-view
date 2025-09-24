@@ -1,21 +1,21 @@
 <template>
   <a-layout-header class="app-header">
     <!-- Theme Toggle Button -->
-    <div class="theme-toggle" @click="toggleTheme">
-      {{ isLightTheme ? '🌙 暗色' : '☀️ 亮色' }}
-    </div>
+<!--    <div class="theme-toggle" @click="toggleTheme">-->
+<!--      {{ isLightTheme ? '🌙 暗色' : '☀️ 亮色' }}-->
+<!--    </div>-->
 
     <!-- 搜索按钮 -->
-    <div class="search-toggle" @click="doOpenSearchModal">
-      <img class="ss-icon" src="../assets/images/sousuo.png" />
-      <span class="search-shortcut">Ctrl+K</span>
-    </div>
+<!--    <div class="search-toggle" @click="doOpenSearchModal">-->
+<!--      <img class="ss-icon" src="../assets/images/sousuo.png" />-->
+<!--      <span class="search-shortcut">Ctrl+K</span>-->
+<!--    </div>-->
 
     <div class="menus-container">
       <!-- 新增 Logo 区域 -->
       <div class="logo-container" @click="goToHome">
         <img
-          src="../assets/images/aiocloud.png"
+          src="../../assets/images/ruankao/raunkao-logo.png"
           :alt="siteName"
           class="logo-image"
         />
@@ -58,10 +58,6 @@
       <!-- Navigation Bar -->
       <nav v-else class="navbar">
         <div class="nav-container">
-          <div class="nav-item dropdown mnms-box" @click="openMockInterview">
-            <img src="../assets/images/remen.png" class="rm-icon" />
-            <span>模拟面试</span>
-          </div>
 
           <!-- 主要菜单项 -->
           <div
@@ -108,19 +104,19 @@
                 @handleSelectMenu="handleSelectMenu"
     />
 
-    <MockInterview v-model:open="showMockInterview" />
+    <MockInterview v-model:visible="showMockInterview" />
   </a-layout-header>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
-import { getRootMenus } from "../api/home/home.ts";
+import { getRootMenus } from "../../api/home/home.ts";
 import { useRouter, useRoute } from "vue-router";
-import { useGlobalStore } from "../store/modules/global.ts";
-import { checkIsMobile, isMobile } from "../utils/util.ts";
-import SearchTool from "./SearchTool.vue";
-import { goToMainPage } from "../views/kn/main/main.ts";
-import MockInterview from './interview/MockInterview.vue';
+import { useGlobalStore } from "../../store/modules/global.ts";
+import { checkIsMobile, isMobile } from "../../utils/util.ts";
+import SearchTool from "../SearchTool.vue";
+import { goToMainPage } from "../../views/kn/main/main.ts";
+import MockInterview from '../interview/MockInterview.vue';
 
 const globalStore = useGlobalStore()
 const isLightTheme = ref(false)
@@ -134,7 +130,7 @@ const isHome = ref(true)
 const screenWidth = ref(window.innerWidth)
 
 // Logo 相关属性
-const siteName = ref('Momo Java 技术小窝') // 文字 logo 或网站名称
+const siteName = ref('软考通') // 文字 logo 或网站名称
 
 // 跟踪当前激活的菜单ID
 const currentActiveMenuId = ref(route.query.menuId || '')
@@ -360,7 +356,7 @@ defineExpose({
 }
 
 .logo-image {
-  height: 36px;
+  height: 55px;
   width: auto;
   border-radius: 20px;
 }

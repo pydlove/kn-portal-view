@@ -8,49 +8,58 @@
 -->
 <!doctype html>
 <html lang="en" dir="ltr" class="hydrated">
-  <link>
-    <meta charset="UTF-8" />
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Momo Java 技术小窝</title>
+  <link rel="icon" href="./src/assets/images/favicon.ico"/>
+  <link rel="stylesheet" href="./src/assets/scss/reset.scss"/>
+  <!-- preconnect - optional -->
+  <link rel="preconnect" href="https://assets.oneweb.mercedes-benz.com"/>
+  <!-- ag grid styles -->
+  <link href="https://fastly.jsdelivr.net/npm/ag-grid-community@32/styles/ag-grid.css"
+        rel="stylesheet"/>
+  <!-- preconnect - optional -->
+  <link rel="preconnect" href="https://assets.oneweb.mercedes-benz.com"/>
+  <!-- styles -->
+  <link
+    href="https://assets.oneweb.mercedes-benz.com/plugin/workbench/core/7.56.1/css/globals.css"
+    rel="stylesheet"/>
+  <!-- styled components -->
+  <link
+    href="https://assets.oneweb.mercedes-benz.com/plugin/workbench/core/7.56.1/css/extensions/components.css"
+    rel="stylesheet"
+  />
 
-    <title>Momo Java 技术小窝</title>
-    <link rel="icon" href="./src/assets/images/favicon.ico"/>
-    <link rel="stylesheet" href="./src/assets/scss/reset.scss" />
-    <!-- preconnect - optional -->
-    <link rel="preconnect" href="https://assets.oneweb.mercedes-benz.com" />
-    <!-- ag grid styles -->
-    <link href="https://fastly.jsdelivr.net/npm/ag-grid-community@32/styles/ag-grid.css" rel="stylesheet" />
-    <!-- preconnect - optional -->
-    <link rel="preconnect" href="https://assets.oneweb.mercedes-benz.com" />
-    <!-- styles -->
-    <link href="https://assets.oneweb.mercedes-benz.com/plugin/workbench/core/7.56.1/css/globals.css" rel="stylesheet" />
-    <!-- styled components -->
-    <link
-      href="https://assets.oneweb.mercedes-benz.com/plugin/workbench/core/7.56.1/css/extensions/components.css"
-      rel="stylesheet"
-    />
+  <script async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1145605955852614"
+          crossorigin="anonymous"></script>
 
-    <!-- components -->
-    <script
-      type="module"
-      src="https://assets.oneweb.mercedes-benz.com/plugin/workbench/core/7.56.1/workbench/workbench.esm.js"
-    ></script>
-  </head>
+  <!-- components -->
+  <script
+    type="module"
+    src="https://assets.oneweb.mercedes-benz.com/plugin/workbench/core/7.56.1/workbench/workbench.esm.js"
+  ></script>
+</head>
 
-  <body>
-    <div id="app"></div>
-    <!-- vue app -->
-    <script type="module" src="/src/main.ts"></script>
-    <!-- workbench js-->
-    <script type="module">
-      import { defineCustomElements } from 'https://assets.oneweb.mercedes-benz.com/plugin/workbench/core/7.56.1/loader/index.js'
-      defineCustomElements(window, {
-        // please replace 'xyz' with your own project prefix
-        transformTagName: (tagName) => `xyz-${tagName}`
-      })
-      defineCustomElements(window, {
-        transformTagName: (tagName) => `${tagName.replace('wb-', 'wb7-')}`
-      })
-    </script>
-  </body>
+<body>
+<div id="app"></div>
+<!-- vue app -->
+<script type="module" src="/src/main.ts"></script>
+<!-- workbench js-->
+<script type="module">
+  import {
+    defineCustomElements
+  } from 'https://assets.oneweb.mercedes-benz.com/plugin/workbench/core/7.56.1/loader/index.js'
+
+  defineCustomElements(window, {
+    // please replace 'xyz' with your own project prefix
+    transformTagName: (tagName) => `xyz-${tagName}`
+  })
+  defineCustomElements(window, {
+    transformTagName: (tagName) => `${tagName.replace('wb-', 'wb7-')}`
+  })
+</script>
+</body>
 </html>

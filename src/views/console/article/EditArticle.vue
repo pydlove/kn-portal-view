@@ -60,7 +60,7 @@
 
   <!-- 文章预览模态框 -->
   <a-modal
-    v-model:visible="previewVisible"
+    v-model:open="previewVisible"
     title="文章预览"
     width="80%"
     :footer="null"

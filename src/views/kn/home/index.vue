@@ -1,6 +1,22 @@
 <!-- src/views/kn/home/index.vue -->
 <template>
   <div class="home-container">
+    <!-- 添加移动端提示组件 -->
+    <div v-if="isMobile && showMobileTip" class="mobile-tip-overlay">
+      <div class="mobile-tip-content">
+        <div class="tip-header">
+          <h3>💡 温馨提示</h3>
+          <span class="tip-close" @click="closeMobileTip">×</span>
+        </div>
+        <div class="tip-body">
+          <p>检测到您正在使用移动设备访问</p>
+          <p>为了获得更好的学习体验和完整功能（如模拟面试），建议您在电脑上访问本站。</p>
+        </div>
+        <div class="tip-footer">
+          <button class="btn btn-primary" @click="closeMobileTip">我知道了</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Banner 区域 -->
     <section class="banner">
@@ -130,6 +146,23 @@ const router = useRouter()
 
 const showMockInterview = ref(false);
 
+// 添加移动端提示显示状态
+const showMobileTip = ref(false);
+
+// 关闭移动端提示
+const closeMobileTip = () => {
+  showMobileTip.value = false;
+  // 设置本地存储，标记用户已知晓提示
+  // 设置1天后过期
+  const expireTime = 24 * 60 * 60 * 1000;
+  const expireAt = Date.now() + expireTime;
+
+  localStorage.setItem('mobileTipShown', JSON.stringify({
+    value: 'true',
+    expireAt: expireAt
+  }));
+};
+
 const openMockInterview = () => {
   showMockInterview.value = true;
 };
@@ -170,6 +203,34 @@ const scrollToContent = () => {
 // 组件挂载时添加平滑滚动行为
 onMounted(() => {
   document.documentElement.style.scrollBehavior = 'smooth';
+
+  // 只在移动端且用户未关闭过提示时显示
+  if (isMobile.value) {
+    const storedData = localStorage.getItem('mobileTipShown');
+    let isExpired = true;
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData);
+        // 判断是否过期
+        if (parsed.expireAt > Date.now()) {
+          isExpired = false;
+        } else {
+          // 如果过期，清除存储
+          localStorage.removeItem('mobileTipShown');
+        }
+      } catch (e) {
+        // 解析失败，清除无效数据
+        localStorage.removeItem('mobileTipShown');
+      }
+    }
+
+    // 只有在未存储或已过期时才显示提示
+    if (isExpired) {
+      setTimeout(() => {
+        showMobileTip.value = true;
+      }, 1000);
+    }
+  }
 })
 
 // 组件销毁前恢复默认滚动行为
@@ -544,7 +605,7 @@ onBeforeUnmount(() => {
   }
 
   .title {
-    font-size: 18px;
+    font-size: 16px;
     margin-bottom: 10px;
   }
 
@@ -580,5 +641,69 @@ onBeforeUnmount(() => {
     position: relative;
     bottom: -324px;
   }
+
+  .mobile-tip-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-tip-content {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 90%;
+    width: 350px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    animation: tipFadeIn 0.3s ease;
+  }
+
+  @keyframes tipFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .tip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .tip-header h3 {
+    margin: 0;
+    color: #096dd9;
+  }
+
+  .tip-close {
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+  }
+
+  .tip-body p {
+    margin: 10px 0;
+    line-height: 1.5;
+    color: #333;
+  }
+
+  .tip-footer {
+    text-align: center;
+    margin-top: 20px;
+  }
+
 }
 </style>

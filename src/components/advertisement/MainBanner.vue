@@ -7,11 +7,17 @@
     <div class="cloud-banner-container">
       <div
         class="cloud-banner-slide"
-        v-for="(banner, index) in cloudBanners"
+        v-for="(banner, index) in visibleBanners"
         :key="index"
-        :class="{ 'active': index === currentBannerIndex }"
+        :class="{ 'active': banner.index === currentBannerIndex }"
       >
-        <img :src="banner.image" :alt="banner.title" class="cloud-icon"/>
+        <img
+          v-if="shouldLoadImage(banner.image, banner.index)"
+          :src="banner.image"
+          :alt="banner.title"
+          class="cloud-icon"
+          @load="markImageAsLoaded(banner.image)"
+        />
         <div class="cloud-banner-text">
           <div class="banner-title">{{ banner.title }}</div>
           <div class="banner-subtitle">{{ banner.subtitle }}</div>
@@ -21,13 +27,13 @@
 
     <!-- 指示器 -->
     <div class="banner-indicators" v-if="cloudBanners.length > 1">
-              <span
-                v-for="(banner, index) in cloudBanners"
-                :key="index"
-                class="indicator"
-                :class="{ 'active': index === currentBannerIndex }"
-                @click.stop="setCurrentBannerIndex(index)"
-              ></span>
+      <span
+        v-for="(banner, index) in cloudBanners"
+        :key="index"
+        class="indicator"
+        :class="{ 'active': index === currentBannerIndex }"
+        @click.stop="setCurrentBannerIndex(index)"
+      ></span>
     </div>
   </div>
 </template>
@@ -39,6 +45,22 @@ import {computed, onMounted, ref} from "vue";
 import txCloudImage from '../../assets/images/cloud/tx_475_250.png';
 import txAiCloudImage from '../../assets/images/cloud/tx_ai_960_540.png';
 import imCloudImage from '../../assets/images/cloud/im.png';
+
+const loadedImages = ref<Set<string>>(new Set());
+
+// 检查图片是否应该加载
+const shouldLoadImage = (imageSrc: string, index: number) => {
+  // 当前图片或下一张图片才加载
+  const currentIndex = currentBannerIndex.value;
+  const nextIndex = (currentIndex + 1) % cloudBanners.value.length;
+
+  return index === currentIndex || index === nextIndex || loadedImages.value.has(imageSrc);
+};
+
+// 标记图片为已加载
+const markImageAsLoaded = (imageSrc: string) => {
+  loadedImages.value.add(imageSrc);
+};
 
 const cloudBanners = ref<Array<{
   title: string;
@@ -53,10 +75,17 @@ const currentBannerIndex = ref(0);
 // 鼠标是否悬停在Banner上
 const isBannerHovered = ref(false);
 
-// 生成滚动Banner副本
-const bannerSlides = computed(() => {
-  // 创建两倍数量的Banner副本用于无缝滚动
-  return [...cloudBanners.value, ...cloudBanners.value];
+// 只渲染当前和下一张图片以减少资源消耗
+const visibleBanners = computed(() => {
+  if (cloudBanners.value.length === 0) return [];
+
+  const currentIndex = currentBannerIndex.value;
+  const nextIndex = (currentIndex + 1) % cloudBanners.value.length;
+
+  return [
+    { ...cloudBanners.value[currentIndex], index: currentIndex },
+    { ...cloudBanners.value[nextIndex], index: nextIndex }
+  ];
 });
 
 const initCloudBanners = () => {

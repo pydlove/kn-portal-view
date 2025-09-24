@@ -181,18 +181,18 @@ const navItems = ref<NavItem[]>([
   },
   {
     id: 5,
-    title: '文档管理',
-    description: '管理系统文档和资料库',
+    title: '考试问题管理',
+    description: '考试管理',
     icon: 'fas fa-file-alt',
-    path: '/document-management',
+    path: '/exam/question',
     color: '#e74a3b'
   },
   {
     id: 6,
-    title: '日志审计',
+    title: '考试计划管理',
     description: '查看系统操作日志',
     icon: 'fas fa-clipboard-list',
-    path: '/log-audit',
+    path: '/exam/calendar',
     color: '#858796'
   }
 ])
