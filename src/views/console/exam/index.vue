@@ -112,7 +112,6 @@
   </div>
 </template>
 
-<!-- src/views/console/exam/index.vue -->
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -192,12 +191,17 @@ const columns = [
   }
 ]
 
-// 处理创建题目
+// 处理创建题目 - 更新路由路径
 const handleCreateQuestion = ({ key }: { key: string }) => {
-  router.push(`/exam/question/create/${key}`);
+  router.push({
+    path: '/exam/question/create',
+    query: {
+      type: key
+    }
+  });
 }
 
-// 处理编辑
+// 处理编辑 - 更新路由路径
 const handleEdit = (record: RkExamQuestion) => {
   router.push(`/exam/question/edit/${record.id}`);
 }

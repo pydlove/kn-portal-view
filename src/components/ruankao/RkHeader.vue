@@ -56,48 +56,48 @@
       </div>
 
       <!-- Navigation Bar -->
-      <nav v-else class="navbar">
-        <div class="nav-container">
+<!--      <nav v-else class="navbar">-->
+<!--        <div class="nav-container">-->
 
-          <!-- 主要菜单项 -->
-          <div
-            v-for="menu in mainMenuList"
-            :key="menu.id"
-            class="nav-item dropdown"
-            :class="{ active: isActiveMenu(menu.id) }"
-            @mouseenter="activeDropdown = menu.id"
-            @mouseleave="activeDropdown = ''"
-            @click.stop="goToMain(menu.id)"
-          >
-            <span>{{ menu.menuName }}</span>
-          </div>
+<!--          &lt;!&ndash; 主要菜单项 &ndash;&gt;-->
+<!--          <div-->
+<!--            v-for="menu in mainMenuList"-->
+<!--            :key="menu.id"-->
+<!--            class="nav-item dropdown"-->
+<!--            :class="{ active: isActiveMenu(menu.id) }"-->
+<!--            @mouseenter="activeDropdown = menu.id"-->
+<!--            @mouseleave="activeDropdown = ''"-->
+<!--            @click.stop="goToMain(menu.id)"-->
+<!--          >-->
+<!--            <span>{{ menu.menuName }}</span>-->
+<!--          </div>-->
 
-          <!-- 更多菜单项 -->
-          <div
-            v-if="moreMenuList.length > 0"
-            class="nav-item dropdown"
-            @mouseenter="activeDropdown = 'more'"
-            @mouseleave="activeDropdown = ''"
-          >
-            <span>更多</span>
-            <div
-              v-show="activeDropdown === 'more'"
-              class="dropdown-content"
-            >
-              <div class="dropdown-column">
-                <div
-                  v-for="menu in moreMenuList"
-                  :key="menu.id"
-                  class="dropdown-item"
-                  @click.stop="goToMain(menu.id)"
-                >
-                  {{ menu.menuName }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
+<!--          &lt;!&ndash; 更多菜单项 &ndash;&gt;-->
+<!--          <div-->
+<!--            v-if="moreMenuList.length > 0"-->
+<!--            class="nav-item dropdown"-->
+<!--            @mouseenter="activeDropdown = 'more'"-->
+<!--            @mouseleave="activeDropdown = ''"-->
+<!--          >-->
+<!--            <span>更多</span>-->
+<!--            <div-->
+<!--              v-show="activeDropdown === 'more'"-->
+<!--              class="dropdown-content"-->
+<!--            >-->
+<!--              <div class="dropdown-column">-->
+<!--                <div-->
+<!--                  v-for="menu in moreMenuList"-->
+<!--                  :key="menu.id"-->
+<!--                  class="dropdown-item"-->
+<!--                  @click.stop="goToMain(menu.id)"-->
+<!--                >-->
+<!--                  {{ menu.menuName }}-->
+<!--                </div>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </nav>-->
     </div>
 
     <SearchTool ref="searchToolRef"

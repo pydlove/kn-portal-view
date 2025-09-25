@@ -65,3 +65,23 @@ export function saveCalendarDateQuestions(id: number, data: any[]) {
   })
 }
 
+
+// 软考日历相关接口
+export const getCalendarDateTasks = (data: { calendarDateStr: string }) => {
+  return request({
+    url: '/api/calendar-date/task/list-by-date',
+    method: 'get',
+    data
+  });
+};
+
+export const getCalendarDateQuestionDetail = (calendarId: number, pageNum: number = 1, pageSize: number = 100) => {
+  return request({
+    url: `/api/calendar-date/${calendarId}/detail`,
+    method: 'get',
+    params: {
+      pageNum,
+      pageSize
+    }
+  });
+};

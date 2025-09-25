@@ -38,6 +38,12 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
     name: 'rkMain',
     component: () => import('@/views/ruankao/main/index.vue')
   },
+  {
+    path: '/rk/study-task',
+    name: 'StudyTask',
+    component: () => import('@/views/ruankao/home/StudyTask.vue')
+  },
+
 
   {
     path: '/noAuth',
@@ -91,38 +97,11 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
     }
   },
   {
-    path: '/exam/question/create/choice',
-    name: 'ExamQuestionCreateChoice',
-    component: () => import('@/views/console/exam/choice-create.vue'),
+    path: '/exam/question/create',
+    name: 'ExamQuestionCreate',
+    component: () => import('@/views/console/exam/create.vue'),
     meta: {
-      title: '创建选择题',
-      hideHeader: true
-    }
-  },
-  {
-    path: '/exam/question/create/case',
-    name: 'ExamQuestionCreateCase',
-    component: () => import('@/views/console/exam/case-create.vue'),
-    meta: {
-      title: '创建案例题',
-      hideHeader: true
-    }
-  },
-  {
-    path: '/exam/question/create/essay',
-    name: 'ExamQuestionCreateEssay',
-    component: () => import('@/views/console/exam/essay-create.vue'),
-    meta: {
-      title: '创建论文题',
-      hideHeader: true
-    }
-  },
-  {
-    path: '/exam/question/create/article',
-    name: 'ExamQuestionCreateArticle',
-    component: () => import('@/views/console/exam/article-create.vue'),
-    meta: {
-      title: '创建论文题',
+      title: '创建题目',
       hideHeader: true
     }
   },

@@ -58,13 +58,13 @@ service.interceptors.request.use(
     }
 
     // Check if current route is ruankao related and modify URL accordingly
-    if (typeof window !== 'undefined' && window.location) {
-      const currentPath = window.location.pathname;
-      // If route is related to ruankao or starts with /rk, prepend 'rk' to the URL
-      if (currentPath.startsWith('/cc/rk')) {
-        config.url = '/rk' + config.url;
-      }
-    }
+    // if (typeof window !== 'undefined' && window.location) {
+    //   const currentPath = window.location.pathname;
+    //   // If route is related to ruankao or starts with /rk, prepend 'rk' to the URL
+    //   if (currentPath.startsWith('/cc/rk')) {
+    //     config.url = '/rk' + config.url;
+    //   }
+    // }
 
     if (['post', 'delete', 'patch', 'put'].includes(config.method.toLocaleLowerCase())) {
       const contentType = config.headers['Content-Type']

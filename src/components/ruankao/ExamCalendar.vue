@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import router from "@/router";
 
 // 类型定义
 interface DayInfo {
@@ -154,27 +155,19 @@ const nextMonth = () => {
 const openDayContent = (day: DayInfo) => {
   if (!day.date) return
 
-  selectedDate.value = day.date
+  // 修复日期格式化问题，保持本地时区
+  const year = day.date.getFullYear()
+  const month = String(day.date.getMonth() + 1).padStart(2, '0')
+  const date = String(day.date.getDate()).padStart(2, '0')
+  const formattedDate = `${year}-${month}-${date}`
 
-  // 模拟获取每日内容（实际应该从API获取）
-  dayContent.value = {
-    title: `软考冲刺第${day.date.getDate()}天`,
-    description: '今日学习重点内容：',
-    items: [
-      {
-        id: 1,
-        title: '系统架构设计考点解析',
-        link: '#'
-      },
-      {
-        id: 2,
-        title: '每日一练：数据库设计题',
-        link: '#'
-      }
-    ]
-  }
-
-  showContentModal.value = true
+  // 跳转到学习任务页面
+  router.push({
+    name: 'StudyTask',
+    query: {
+      date: formattedDate
+    }
+  })
 }
 
 // 关闭弹窗
