@@ -75,13 +75,10 @@ export const getCalendarDateTasks = (data: { calendarDateStr: string }) => {
   });
 };
 
-export const getCalendarDateQuestionDetail = (calendarId: number, pageNum: number = 1, pageSize: number = 100) => {
+export const getCalendarDateQuestionDetail = (calendarId: number, data: { pageNum: number; pageSize: number }) => {
   return request({
     url: `/api/calendar-date/${calendarId}/detail`,
     method: 'get',
-    params: {
-      pageNum,
-      pageSize
-    }
+    data
   });
 };

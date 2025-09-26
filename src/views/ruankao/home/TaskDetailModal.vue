@@ -1,125 +1,169 @@
 <!-- src/views/ruankao/home/TaskDetailModal.vue -->
 <template>
   <div v-if="visible" class="task-modal" @click="closeModal">
+    <div class="modal-overlay"></div>
     <div class="modal-content" @click.stop>
       <div class="modal-header">
-        <h2>{{ task?.planTitle }}</h2>
+        <div class="header-content">
+          <h2>{{ task?.planTitle }}</h2>
+          <div class="progress-bar" v-if="totalQuestions > 0">
+            <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
+          </div>
+        </div>
         <span class="close-btn" @click="closeModal">&times;</span>
       </div>
 
-      <div class="modal-body">
-        <div v-if="detailLoading" class="loading">
-          加载中...
-        </div>
-
-        <div v-else-if="currentQuestion" class="question-detail">
-          <!-- 问题类型标签 -->
-          <div class="question-type-tag" :class="questionTypeClass">
-            {{ questionTypeName }}
+      <div class="modal-body-wrapper">
+        <div class="modal-body">
+          <div v-if="detailLoading" class="loading">
+            <div class="spinner"></div>
+            <p>加载中...</p>
           </div>
 
-          <!-- 选择题 -->
-          <div v-if="currentQuestion.questionChoice" class="question-content">
-            <h3>问题：{{ currentQuestion.title }}</h3>
-            <div class="question-difficulty">
-              难度：{{ getDifficultyText(currentQuestion.difficulty) }}
+          <div v-else-if="currentQuestion" class="question-detail">
+            <!-- 问题类型标签 -->
+            <div class="question-type-tag" :class="questionTypeClass">
+              {{ questionTypeName }}
             </div>
-            <div class="question-options">
-              <div
-                v-for="(option, index) in choiceOptions"
-                :key="index"
-                class="option-item"
-                :class="{ 'selected': selectedChoice === option.key }"
-              >
-                <label>
-                  <input
-                    type="radio"
-                    :name="`question-${currentQuestion.id}`"
-                    :value="option.key"
-                    v-model="selectedChoice"
-                    @change="handleOptionChange"
-                  />
-                  <span class="option-label">{{ option.key }}.</span>
-                  <span class="option-text">{{ option.value }}</span>
-                </label>
-              </div>
-            </div>
+
+            <!-- 选择题 -->
+            <ChoiceQuestion
+              v-if="currentQuestion.questionChoice"
+              :question="currentQuestion"
+              :selected-choice="selectedChoice"
+              :show-answer="showAnswer"
+              :render-markdown="renderMarkdown"
+              @select-option="selectOption"
+            />
+
+            <!-- 案例题 -->
+            <CaseQuestion
+              v-else-if="currentQuestion.questionCase"
+              :question="currentQuestion"
+              :render-markdown="renderMarkdown"
+              @toggle-answer="toggleCaseAnswer"
+            />
+
+            <!-- 论文题 -->
+            <EssayQuestion
+              v-else-if="currentQuestion.questionEssay"
+              :question="currentQuestion"
+              :render-markdown="renderMarkdown"
+              @toggle-answer="toggleEssayAnswer"
+            />
+
+            <!-- 文章 -->
+            <ArticleQuestion
+              v-else-if="currentQuestion.questionArticle"
+              :question="currentQuestion"
+              :render-markdown="renderMarkdown"
+            />
           </div>
 
-          <!-- 案例题 -->
-          <div v-else-if="currentQuestion.questionCase" class="question-content">
-            <h3>{{ currentQuestion.title }}</h3>
-            <div class="question-desc"
-                 v-html="currentQuestion.questionCase.description"></div>
-          </div>
-
-          <!-- 论文题 -->
-          <div v-else-if="currentQuestion.questionEssay" class="question-content">
-            <h3>{{ currentQuestion.title }}</h3>
-            <div class="question-desc"
-                 v-html="currentQuestion.questionEssay.description"></div>
-          </div>
-
-          <!-- 文章 -->
-          <div v-else-if="currentQuestion.questionArticle" class="question-content">
-            <h3>{{ currentQuestion.title }}</h3>
-            <div class="article-content"
-                 v-html="currentQuestion.questionArticle.content"></div>
-          </div>
-
-          <!-- 操作按钮 -->
-          <div class="question-actions">
-            <div class="pagination-info">
-              {{ currentIndex + 1 }} / {{ questionList.length }}
-            </div>
-            <div class="action-buttons">
-              <button
-                v-if="currentIndex > 0"
-                class="prev-btn"
-                @click="prevQuestion"
-              >
-                上一题
-              </button>
-              <button
-                v-if="isArticleType"
-                class="next-btn"
-                @click="nextQuestion"
-              >
-                下一篇
-              </button>
-              <button
-                v-else
-                class="next-btn"
-                @click="nextQuestion"
-                :disabled="!canGoNext"
-              >
-                下一题
-              </button>
-            </div>
+          <div v-else-if="!detailLoading && totalQuestions === 0" class="no-questions">
+            <div class="empty-icon">📝</div>
+            <p>暂无任务内容</p>
           </div>
         </div>
 
-        <div v-else-if="!detailLoading && questionList.length === 0" class="no-questions">
-          暂无任务内容
+        <!-- 操作按钮固定在底部 -->
+        <div class="question-actions">
+          <div class="pagination-info">
+            {{ currentIndex + 1 }} / {{ totalQuestions }}
+          </div>
+          <div class="action-buttons">
+            <button
+              v-if="currentIndex > 0"
+              class="btn prev-btn"
+              @click="prevQuestion"
+            >
+              <i class="arrow-icon left"></i>
+              上一题
+            </button>
+            <button
+              v-if="isArticleType && currentIndex < totalQuestions - 1"
+              class="btn next-btn"
+              @click="nextQuestion"
+            >
+              下一篇
+              <i class="arrow-icon right"></i>
+            </button>
+            <button
+              v-else-if="isArticleType && currentIndex === totalQuestions - 1"
+              class="btn next-btn"
+              @click="finishArticle"
+            >
+              完成
+            </button>
+            <button
+              v-else-if="currentQuestion?.type === 'CHOICE' && !showAnswer"
+              class="btn submit-btn"
+              @click="submitAnswer"
+              :disabled="!selectedChoice"
+            >
+              确定
+            </button>
+            <button
+              v-else-if="currentQuestion?.type === 'CHOICE' && showAnswer"
+              class="btn next-btn"
+              @click="nextQuestion"
+            >
+              {{ currentIndex === totalQuestions - 1 ? '提交' : '下一题' }}
+              <i class="arrow-icon right" v-if="currentIndex < totalQuestions - 1"></i>
+            </button>
+            <button
+              v-else-if="currentQuestion?.type === 'CASE' || currentQuestion?.type === 'ESSAY'"
+              class="btn next-btn"
+              @click="nextQuestion"
+            >
+              {{ currentIndex === totalQuestions - 1 ? '提交' : '下一题' }}
+              <i class="arrow-icon right"></i>
+            </button>
+            <button
+              v-else
+              class="btn next-btn"
+              @click="nextQuestion"
+            >
+              {{ currentIndex === totalQuestions - 1 ? '提交' : '下一题' }}
+              <i class="arrow-icon right"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- 选择题结果弹窗 -->
+  <ResultModal
+    v-if="showResult && isChoiceType"
+    :score="score"
+    :correct-count="correctCount"
+    :total-questions="totalQuestions"
+    @close="handleResultClose"
+  />
+
+  <!-- 案例题和论文题练习完成弹窗 -->
+  <PracticeResultModal
+    v-if="showResult && !isChoiceType && !isArticleType"
+    @close="handlePracticeResultClose"
+  />
 </template>
 
 <script setup lang="ts">
 import {ref, computed, watch} from 'vue'
 import {getCalendarDateQuestionDetail} from '@/api/calendar/calendarDate'
+import { marked } from 'marked'
+import ResultModal from './ResultModal.vue'
+import PracticeResultModal from './PracticeResultModal.vue'
+import ChoiceQuestion from './ChoiceQuestion.vue'
+import CaseQuestion from './CaseQuestion.vue'
+import EssayQuestion from './EssayQuestion.vue'
+import ArticleQuestion from './ArticleQuestion.vue'
 
 interface Task {
   id: number
   planTitle: string
   planDescription: string
-}
-
-interface ChoiceOption {
-  key: string
-  value: string
 }
 
 interface QuestionChoice {
@@ -134,13 +178,19 @@ interface QuestionChoice {
 interface QuestionCase {
   id?: number
   title?: string
-  description?: string
+  background?: string
+  requirement?: string
+  referenceAnswer?: string
 }
 
 interface QuestionEssay {
   id?: number
   title?: string
-  description?: string
+  requirement?: string
+  wordLimitMin?: number
+  wordLimitMax?: number
+  referenceAnswer?: string
+  scoringCriteria?: string
 }
 
 interface QuestionArticle {
@@ -153,6 +203,7 @@ interface RkExamQuestionDetailPageVO {
   id?: number
   title?: string
   type?: string
+  score?: number
   difficulty?: number
   questionEssay?: QuestionEssay
   questionChoice?: QuestionChoice
@@ -174,19 +225,25 @@ const detailLoading = ref(false)
 const questionList = ref<RkExamQuestionDetailPageVO[]>([])
 const currentIndex = ref(0)
 const selectedChoice = ref<string | null>(null)
+const showAnswer = ref(false)
+const showCaseAnswer = ref(false) // 控制案例题答案显示
+const showEssayAnswer = ref(false) // 控制论文题答案显示
+const totalQuestions = ref(0)
+const showResult = ref(false)
+const score = ref(0)
+const correctCount = ref(0)
+const userAnswers = ref<{ [key: number]: string }>({})
 
-const handleOptionChange = () => {
-  // 可以在这里添加选项变化时的逻辑
-}
+// 配置marked
+marked.setOptions({
+  breaks: true, // 转换段落中的换行符为<br>
+  gfm: true, // 启用GitHub Flavored Markdown
+})
 
-// 添加获取难度文本的方法
-const getDifficultyText = (difficulty: number | undefined) => {
-  const difficultyMap: Record<number, string> = {
-    1: '简单',
-    2: '中等',
-    3: '困难'
-  }
-  return difficulty ? difficultyMap[difficulty] : '未知'
+// Markdown渲染函数
+const renderMarkdown = (content: string | undefined) => {
+  if (!content) return ''
+  return marked.parse(content)
 }
 
 // 当前问题
@@ -194,9 +251,20 @@ const currentQuestion = computed(() => {
   return questionList.value[currentIndex.value] || null
 })
 
+// 进度百分比
+const progressPercentage = computed(() => {
+  if (totalQuestions.value === 0) return 0
+  return ((currentIndex.value + 1) / totalQuestions.value) * 100
+})
+
 // 是否为文章类型
 const isArticleType = computed(() => {
   return currentQuestion.value?.type === 'ARTICLE'
+})
+
+// 是否为选择题类型
+const isChoiceType = computed(() => {
+  return currentQuestion.value?.type === 'CHOICE'
 })
 
 // 问题类型名称
@@ -221,41 +289,92 @@ const questionTypeClass = computed(() => {
   return classMap[currentQuestion.value?.type || ''] || ''
 })
 
-// 选择题选项
-const choiceOptions = computed<ChoiceOption[]>(() => {
-  if (!currentQuestion.value?.questionChoice) return []
+// 是否为正确答案
+const isCorrect = (optionKey: string) => {
+  if (!currentQuestion.value?.questionChoice?.correctAnswers) return false
+  return currentQuestion.value.questionChoice.correctAnswers.includes(optionKey)
+}
 
-  const choice = currentQuestion.value.questionChoice
-  const options: ChoiceOption[] = []
+// 选择选项
+const selectOption = (key: string) => {
+  if (currentQuestion.value?.type === 'CHOICE' && !showAnswer.value) {
+    selectedChoice.value = key
+  }
+}
 
-  // 解析 options 字段（JSON 字符串）
-  try {
-    const parsedOptions = JSON.parse(choice.options || '[]')
-    if (Array.isArray(parsedOptions)) {
-      parsedOptions.forEach((item: any) => {
-        if (item.label && item.content) {
-          options.push({
-            key: item.label,
-            value: item.content
-          })
-        }
-      })
+// 切换案例题答案显示
+const toggleCaseAnswer = () => {
+  showCaseAnswer.value = !showCaseAnswer.value
+}
+
+// 切换论文题答案显示
+const toggleEssayAnswer = () => {
+  showEssayAnswer.value = !showEssayAnswer.value
+}
+
+// 完成文章阅读
+const finishArticle = () => {
+  closeModal()
+}
+
+// 提交答案
+const submitAnswer = async () => {
+  // 如果没有选择答案，不执行任何操作
+  if (!selectedChoice.value) {
+    return;
+  }
+
+  // 保存用户答案
+  if (currentQuestion.value?.id && selectedChoice.value) {
+    userAnswers.value[currentQuestion.value.id] = selectedChoice.value;
+
+    // 检查答案是否正确
+    if (isCorrect(selectedChoice.value)) {
+      correctCount.value++;
     }
-  } catch (error) {
-    console.error('解析 options 失败:', error)
   }
 
-  return options
-})
+  // 显示答案反馈和解析
+  showAnswer.value = true;
+}
 
-// 是否可以进入下一题（对于非文章类型）
-const canGoNext = computed(() => {
-  if (isArticleType.value) return true
-  if (currentQuestion.value?.type === 'CHOICE') {
-    return !!selectedChoice.value
+// 加载下一题
+const loadNextQuestion = async () => {
+  if (currentIndex.value < totalQuestions.value - 1) {
+    try {
+      detailLoading.value = true;
+      // 修正：使用 currentIndex.value + 2 作为页码，因为页码从1开始，而 currentIndex 从0开始
+      const response = await getCalendarDateQuestionDetail(props.task!.id, {
+        pageNum: currentIndex.value + 2,
+        pageSize: 1
+      });
+
+      if (response.records && response.records.length > 0) {
+        // 替换当前题目列表中的下一题
+        if (questionList.value.length > currentIndex.value + 1) {
+          questionList.value[currentIndex.value + 1] = response.records[0];
+        } else {
+          questionList.value.push(response.records[0]);
+        }
+
+        currentIndex.value++;
+        selectedChoice.value = null;
+        showAnswer.value = false;
+        showCaseAnswer.value = false; // 重置案例题答案显示状态
+        showEssayAnswer.value = false; // 重置论文题答案显示状态
+
+        // 检查是否之前答过这题
+        if (response.records[0].id && userAnswers.value[response.records[0].id]) {
+          selectedChoice.value = userAnswers.value[response.records[0].id];
+        }
+      }
+    } catch (error) {
+      console.error('加载下一题失败:', error);
+    } finally {
+      detailLoading.value = false;
+    }
   }
-  return true
-})
+}
 
 // 获取任务详情
 const fetchTaskDetail = async () => {
@@ -263,12 +382,19 @@ const fetchTaskDetail = async () => {
 
   try {
     detailLoading.value = true
-    const response = await getCalendarDateQuestionDetail(props.task.id, 1, 100)
+    const response = await getCalendarDateQuestionDetail(props.task.id, {pageNum: 1, pageSize: 1})
 
     questionList.value = response.records || []
-    console.log('questionList', questionList)
+    totalQuestions.value = response.total || 0
     currentIndex.value = 0
     selectedChoice.value = null
+    showAnswer.value = false
+    showCaseAnswer.value = false; // 初始化案例题答案显示状态
+    showEssayAnswer.value = false; // 初始化论文题答案显示状态
+    showResult.value = false
+    score.value = 0
+    correctCount.value = 0
+    userAnswers.value = {}
   } catch (error) {
     console.error('获取任务详情失败:', error)
   } finally {
@@ -277,24 +403,105 @@ const fetchTaskDetail = async () => {
 }
 
 // 上一题
-const prevQuestion = () => {
+const prevQuestion = async () => {
   if (currentIndex.value > 0) {
-    currentIndex.value--
-    selectedChoice.value = null
+    try {
+      detailLoading.value = true
+      // 修正：使用 currentIndex.value 作为页码
+      const response = await getCalendarDateQuestionDetail(props.task!.id, {
+        pageNum: currentIndex.value,
+        pageSize: 1
+      })
+
+      if (response.records && response.records.length > 0) {
+        // 替换当前题目列表中的上一题
+        questionList.value[currentIndex.value - 1] = response.records[0];
+        currentIndex.value--
+        selectedChoice.value = null
+        showAnswer.value = false
+        showCaseAnswer.value = false; // 重置案例题答案显示状态
+        showEssayAnswer.value = false; // 重置论文题答案显示状态
+
+        // 检查是否之前答过这题
+        if (response.records[0].id && userAnswers.value[response.records[0].id]) {
+          selectedChoice.value = userAnswers.value[response.records[0].id];
+        }
+      }
+    } catch (error) {
+      console.error('加载上一题失败:', error)
+    } finally {
+      detailLoading.value = false
+    }
   }
 }
 
 // 下一题
-const nextQuestion = () => {
-  if (currentIndex.value < questionList.value.length - 1) {
-    currentIndex.value++
-    selectedChoice.value = null
+const nextQuestion = async () => {
+  // 如果是选择题且没有显示答案，则先保存当前答案再进入下一题
+  if (currentQuestion.value?.type === 'CHOICE' && !showAnswer.value) {
+    // 保存用户答案（如果有的话）
+    if (currentQuestion.value?.id && selectedChoice.value) {
+      userAnswers.value[currentQuestion.value.id] = selectedChoice.value;
+
+      // 检查答案是否正确
+      if (isCorrect(selectedChoice.value)) {
+        correctCount.value++;
+      }
+    }
+  }
+
+  // 如果是最后一题，显示结果或提交
+  if (currentIndex.value === totalQuestions.value - 1) {
+    // 如果是选择题且还没提交答案，先提交答案
+    if (currentQuestion.value?.type === 'CHOICE' && !showAnswer.value) {
+      if (selectedChoice.value) {
+        submitAnswer();
+      } else {
+        // 没有选择答案，直接完成
+        score.value = Math.round((correctCount.value / totalQuestions.value) * 100);
+        showResult.value = true;
+      }
+      return;
+    }
+
+    // 已经显示答案，计算得分并显示结果
+    if (currentQuestion.value?.type === 'CHOICE') {
+      score.value = Math.round((correctCount.value / totalQuestions.value) * 100);
+    }
+    showResult.value = true;
+    return;
+  }
+
+  // 如果是选择题且已经显示答案，或者不是选择题，直接加载下一题
+  if ((currentQuestion.value?.type === 'CHOICE' && showAnswer.value) || currentQuestion.value?.type !== 'CHOICE') {
+    await loadNextQuestion();
+  } else {
+    // 如果是选择题但还没提交答案，先提交答案
+    if (currentQuestion.value?.type === 'CHOICE' && selectedChoice.value) {
+      submitAnswer();
+    } else {
+      // 没有选择答案，直接进入下一题
+      await loadNextQuestion();
+    }
   }
 }
 
 // 关闭弹框
 const closeModal = () => {
   emit('close')
+}
+
+// 处理选择题结果弹窗关闭
+const handleResultClose = () => {
+  showResult.value = false
+  emit('close')
+}
+
+// 处理案例题和论文题练习完成弹窗关闭
+const handlePracticeResultClose = () => {
+  showResult.value = false
+  // 继续加载下一题
+  loadNextQuestion()
 }
 
 // 监听任务变化
@@ -305,6 +512,14 @@ watch(() => props.task, (newTask) => {
     questionList.value = []
     currentIndex.value = 0
     selectedChoice.value = null
+    showAnswer.value = false
+    showCaseAnswer.value = false; // 重置案例题答案显示状态
+    showEssayAnswer.value = false; // 重置论文题答案显示状态
+    totalQuestions.value = 0
+    showResult.value = false
+    score.value = 0
+    correctCount.value = 0
+    userAnswers.value = {}
   }
 }, {immediate: true})
 </script>
@@ -316,13 +531,21 @@ watch(() => props.task, (newTask) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(5px);
   animation: fadeIn 0.3s ease-out;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
 }
 
 @keyframes fadeIn {
@@ -336,7 +559,7 @@ watch(() => props.task, (newTask) => {
 
 .modal-content {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   width: 90%;
   max-width: 800px;
   max-height: 90vh;
@@ -345,6 +568,8 @@ watch(() => props.task, (newTask) => {
   flex-direction: column;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
   animation: slideIn 0.3s ease-out;
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes slideIn {
@@ -359,30 +584,51 @@ watch(() => props.task, (newTask) => {
 }
 
 .modal-header {
-  padding: 20px;
+  padding: 20px 24px;
   border-bottom: 1px solid #eee;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  background: linear-gradient(120deg, #f8f9ff, #f0f4ff);
+}
+
+.header-content {
+  flex: 1;
 }
 
 .modal-header h2 {
-  margin: 0;
-  color: #333;
-  font-size: 20px;
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.progress-bar {
+  height: 6px;
+  background-color: #e0e7ff;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 3px;
+  transition: width 0.3s ease;
 }
 
 .close-btn {
   font-size: 28px;
   cursor: pointer;
   color: #999;
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   transition: all 0.2s;
+  margin-top: -5px;
 }
 
 .close-btn:hover {
@@ -390,16 +636,57 @@ watch(() => props.task, (newTask) => {
   background: #f5f5f5;
 }
 
-.modal-body {
+/* 新增的包装器，用于分离可滚动内容和固定按钮 */
+.modal-body-wrapper {
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  overflow-y: auto;
-  padding: 20px;
+  overflow: hidden;
 }
 
-.loading, .no-questions {
+.modal-body {
+  overflow-y: auto;
+  padding: 24px;
+  max-height: 600px;
+}
+
+.loading {
   text-align: center;
-  padding: 50px 20px;
+  padding: 60px 20px;
   color: #666;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(102, 126, 234, 0.2);
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.no-questions {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
 }
 
 .question-detail {
@@ -410,11 +697,12 @@ watch(() => props.task, (newTask) => {
 
 .question-type-tag {
   align-self: flex-start;
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
   font-size: 14px;
-  font-weight: bold;
-  margin-bottom: 20px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .choice-type {
@@ -439,273 +727,199 @@ watch(() => props.task, (newTask) => {
 
 .question-content {
   flex: 1;
+  padding-bottom: 20px;
 }
 
-.question-content h3 {
+.question-title {
   margin: 0 0 20px 0;
-  color: #333;
-  line-height: 1.4;
+  color: #2c3e50;
+  line-height: 1.5;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-.question-desc, .article-content {
-  line-height: 1.6;
+/* 难度和得分显示样式 */
+.question-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.question-difficulty {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.difficulty-label {
+  font-weight: 500;
   color: #555;
-  white-space: pre-wrap;
+  margin-right: 8px;
 }
 
-.question-options {
+.difficulty-value {
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  color: #fff;
+}
+
+.difficulty-value.easy {
+  background: #4caf50;
+}
+
+.difficulty-value.medium {
+  background: #ff9800;
+}
+
+.difficulty-value.hard {
+  background: #f44336;
+}
+
+.question-score {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 20px;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 12px;
 }
 
-.option-item label {
-  display: flex;
-  align-items: flex-start;
-  cursor: pointer;
-  padding: 12px;
-  border-radius: 8px;
-  transition: all 0.2s;
+.score-label {
+  font-weight: 500;
+  color: #555;
+  margin-right: 8px;
 }
 
-.option-item label:hover {
-  background: #f5f5f5;
-}
-
-.option-item input[type="radio"] {
-  margin-top: 3px;
-  margin-right: 10px;
-}
-
-.option-label {
-  font-weight: bold;
-  margin-right: 5px;
-}
-
-.option-text {
-  flex: 1;
+.score-value {
+  font-weight: 600;
+  color: #667eea;
 }
 
 .question-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
+  padding: 24px;
+  border-top: 1px solid #edf2f7;
+  background: white;
+  flex-shrink: 0; /* 防止按钮区域被压缩 */
 }
 
 .pagination-info {
-  color: #666;
+  color: #718096;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .action-buttons {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
-.prev-btn, .next-btn {
+.btn {
   padding: 10px 20px;
-  border-radius: 6px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
 }
 
 .prev-btn {
-  background: #f5f5f5;
-  color: #333;
+  background: #f1f5f9;
+  color: #4a5568;
 }
 
 .prev-btn:hover {
-  background: #e0e0e0;
+  background: #e2e8f0;
 }
 
-.next-btn {
+.next-btn, .submit-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-.next-btn:hover:not(:disabled) {
+.next-btn:hover:not(:disabled), .submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
-.next-btn:disabled {
-  background: #ccc;
+.submit-btn:disabled {
+  background: #cbd5e0;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.option-item label {
-  display: flex;
-  align-items: flex-start;
-  cursor: pointer;
-  padding: 12px;
-  border-radius: 8px;
-  transition: all 0.2s;
-  color: #333;
+.arrow-icon {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
 }
 
-.option-item label:hover {
-  background: #f5f5f5;
-  color: #000;
+.arrow-icon.left {
+  border-right: 6px solid currentColor;
+  margin-right: 4px;
 }
 
-.option-item input[type="radio"]:checked + .option-label,
-.option-item input[type="radio"]:checked ~ .option-text {
-  color: #0066cc;
-}
-
-.option-label {
-  font-weight: bold;
-  margin-right: 5px;
-  color: #333;
-}
-
-.option-text {
-  flex: 1;
-  color: #555;
-}
-
-/* 新增的样式 */
-.question-content {
-  flex: 1;
-  padding: 20px 0;
-}
-
-.question-content h3 {
-  margin: 0 0 15px 0;
-  color: #333;
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.question-difficulty {
-  margin-bottom: 20px;
-  color: #999;
-  font-size: 14px;
-}
-
-.question-options {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.option-item {
-  transition: all 0.2s;
-}
-
-.option-item:last-child {
-  border-bottom: none;
-}
-
-.option-item.selected {
-  background-color: #f8f9fa;
-}
-
-.option-item label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  border-radius: 0;
-  padding: 5px;
-}
-
-.option-item input[type="radio"] {
-  margin-right: 10px;
-  width: 16px;
-  height: 16px;
-  border: 1px solid #ccc;
-  border-radius: 50%;
-  appearance: none;
-  -webkit-appearance: none;
-  background: white;
-}
-
-.option-item input[type="radio"]:checked {
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-.option-item input[type="radio"]:checked::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 8px;
-  height: 8px;
-  background-color: white;
-  border-radius: 50%;
-}
-
-.option-label {
-  font-weight: normal;
-  margin-right: 5px;
-  color: #333;
-}
-
-.option-text {
-  flex: 1;
-  color: #555;
-}
-
-/* 按钮样式调整 */
-.next-btn {
-  background: #f0f0f0;
-  color: #666;
-  border: 1px solid #ddd;
-  box-shadow: none;
-  padding: 8px 16px;
-  font-size: 14px;
-}
-
-.next-btn:hover:not(:disabled) {
-  background: #e0e0e0;
-  transform: none;
-}
-
-.next-btn:disabled {
-  background: #f8f9fa;
-  color: #ccc;
-  cursor: not-allowed;
+.arrow-icon.right {
+  border-left: 6px solid currentColor;
+  margin-left: 4px;
 }
 
 @media (max-width: 768px) {
   .modal-content {
     width: 95%;
     max-height: 95vh;
+    border-radius: 12px;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
   }
 
   .modal-header h2 {
-    font-size: 18px;
+    font-size: 20px;
   }
 
   .modal-body {
-    padding: 15px;
+    padding: 20px;
   }
 
   .question-actions {
     flex-direction: column;
-    gap: 15px;
+    gap: 16px;
     align-items: stretch;
+    padding: 20px;
   }
 
   .action-buttons {
     justify-content: space-between;
   }
 
-  .prev-btn, .next-btn {
+  .btn {
     flex: 1;
     padding: 12px;
+    justify-content: center;
+  }
+
+  .question-title {
+    font-size: 16px;
+  }
+
+  .question-info {
+    flex-direction: column;
+    gap: 12px;
   }
 }
 </style>

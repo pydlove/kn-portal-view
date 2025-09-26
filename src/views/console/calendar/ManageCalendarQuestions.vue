@@ -57,6 +57,7 @@
                   <a-tag v-if="record.type === 'CHOICE'" color="blue">选择题</a-tag>
                   <a-tag v-else-if="record.type === 'CASE'" color="green">案例题</a-tag>
                   <a-tag v-else-if="record.type === 'ESSAY'" color="orange">论文题</a-tag>
+                  <a-tag v-else-if="record.type === 'ARTICLE'" color="purple">文章</a-tag>
                   <a-tag v-else>未知</a-tag>
                 </template>
                 <template v-else-if="column.key === 'title'">
@@ -94,6 +95,7 @@
                   <a-tag v-if="record.type === 'CHOICE'" color="blue">选择题</a-tag>
                   <a-tag v-else-if="record.type === 'CASE'" color="green">案例题</a-tag>
                   <a-tag v-else-if="record.type === 'ESSAY'" color="orange">论文题</a-tag>
+                  <a-tag v-else-if="record.type === 'ARTICLE'" color="purple">文章</a-tag>
                   <a-tag v-else>未知</a-tag>
                 </template>
                 <template v-else-if="column.key === 'title'">
@@ -264,6 +266,8 @@ const getTypeText = (type: string) => {
       return '案例题';
     case 'essay':
       return '论文题';
+    case 'article':
+      return '文章';
     default:
       return '未知';
   }
@@ -278,6 +282,8 @@ const getTypeColor = (type: string) => {
       return 'green';
     case 'essay':
       return 'orange';
+    case 'article':
+      return 'red';
     default:
       return 'default';
   }

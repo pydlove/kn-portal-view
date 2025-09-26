@@ -204,7 +204,7 @@ const isActiveMenu = (menuId) => {
 // 跳转到首页
 const goToHome = () => {
   currentActiveMenuId.value = ''
-  router.push({name: 'home'})
+  router.push({name: 'rkHome'})
 
   resetMobileState()
 }
