@@ -5,8 +5,9 @@
       <div class="footer-info">
         <span>&copy; {{ currentYear }} Java 技术小窝. 保留所有权利.</span>
         <span class="ft-ba">
+          <img src="../assets/images/beian.png" class="beian-icon">
           <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
-            某ICP备xxxxxxxx号-x
+            浙ICP备2025200943号
           </a>
         </span>
       </div>
@@ -50,6 +51,10 @@ const openSocial = (platform: string) => {
 </script>
 
 <style scoped>
+.beian-icon {
+  width: 20px;
+  height: 20px;
+}
 
 .fullstack-page .footer {
   color: #adbac7;
@@ -82,7 +87,10 @@ const openSocial = (platform: string) => {
 }
 
 .ft-ba {
-  margin-left: 20px
+  margin-left: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap:5px;
 }
 
 @media (max-width: 768px) {
