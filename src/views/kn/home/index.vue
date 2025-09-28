@@ -18,6 +18,22 @@
       </div>
     </div>
 
+    <!-- 软考产品互推横幅 -->
+    <div v-if="!isMobile" class="cross-promotion-banner">
+      <div class="promotion-content">
+        <div class="promotion-text">
+          <h3>🎯 准备软考？我们也有专业的软考冲刺计划</h3>
+          <p>30天高效备考，精准预测考点，助你轻松通过软考</p>
+        </div>
+        <div class="promotion-actions">
+          <button class="btn btn-secondary" @click="goToRuankaoSite">
+            前往冲刺软考
+            <span class="external-icon">↗</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Banner 区域 -->
     <section class="banner">
       <div class="banner-content">
@@ -149,6 +165,10 @@ const showMockInterview = ref(false);
 // 添加移动端提示显示状态
 const showMobileTip = ref(false);
 
+const goToRuankaoSite = () => {
+  router.push('/rk/home')
+}
+
 // 关闭移动端提示
 const closeMobileTip = () => {
   showMobileTip.value = false;
@@ -240,6 +260,72 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+
+/* 软考互推横幅 */
+.cross-promotion-banner {
+  background: linear-gradient(135deg, #a6e3ff 0%, #667eea 100%);
+  border-radius: 6px;
+  padding: 25px;
+  margin: 10px;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.promotion-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.promotion-text h3 {
+  color: #1e40af;
+  margin: 0 0 10px 0;
+  font-size: 1.4rem;
+}
+
+.promotion-text p {
+  color: #312e81;
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.promotion-actions .btn-secondary {
+  background: linear-gradient(135deg, #1e40af, #312e81);
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+}
+
+.promotion-actions .btn-secondary:hover {
+  background: linear-gradient(135deg, #312e81, #1e40af);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(30, 64, 175, 0.4);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .promotion-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .promotion-text h3 {
+    font-size: 1.2rem;
+  }
+
+  .cross-promotion-banner {
+    padding: 20px;
+    margin: 20px 15px;
+  }
+}
+
 /* 用户使用导航样式 */
 .user-guide {
   background: linear-gradient(135deg, #f0f2f5 0%, #ffffff 100%);

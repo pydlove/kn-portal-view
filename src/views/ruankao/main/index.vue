@@ -2,14 +2,14 @@
 <template>
   <div :key="menuId">
     <div v-if="isMobile" class="main-container">
-      <Sidebar
+      <RkSidebar
         ref="sidebarRef"
         class="sidebar-container"
         :class="{ 'sidebar-hidden': isSidebarHidden }"
         :activeMenuId="menuId"
         :title="title"
         @handleArticleSelected="handleArticleSelected"
-      ></Sidebar>
+      ></RkSidebar>
 
       <div class="content-container">
         <div class="article-content">
@@ -34,14 +34,14 @@
     </div>
 
     <div v-else class="main-container">
-      <Sidebar
+      <RkSidebar
         ref="sidebarRef"
         class="sidebar-container"
         :class="{ 'sidebar-hidden': isSidebarHidden }"
         :activeMenuId="menuId"
         @handleArticleSelected="handleArticleSelected"
         @doPcToggleSidebar="toggleSidebar"
-      ></Sidebar>
+      ></RkSidebar>
 
       <!-- 显示侧边栏的按钮 -->
       <div
@@ -103,7 +103,7 @@
           <MainBanner />
         </div>
 
-        <RightTool ref="rightToolRef" @toggleSidebar="toggleSidebar"
+        <RkRightTool ref="rightToolRef" @toggleSidebar="toggleSidebar"
                    @scrollToTop="scrollToTop"/>
       </div>
 
@@ -116,9 +116,9 @@
 <!-- src/views/kn/main/index.vue -->
 <script setup lang="ts">
 import {useRoute} from 'vue-router'
-import Sidebar from '../../../components/Sidebar.vue'
+import RkSidebar from '../../../components/ruankao/RkSidebar.vue'
 import Footer from '../../../components/Footer.vue'
-import RightTool from '../../../components/RightTool.vue'
+import RkRightTool from '../../../components/ruankao/RkRightTool.vue'
 import {ref, watch, computed, onMounted, nextTick} from "vue"
 import {marked} from 'marked'
 // 引入 Prism.js
@@ -139,10 +139,10 @@ import 'prismjs/components/prism-properties'
 import mermaid from 'mermaid'
 import {TitleItem} from "@/components/Sidebar.vue";
 import MainBanner from "@/components/advertisement/MainBanner.vue";
-import {getArticle} from "@/api/home/home";
-import {ArticleVO} from "@/views/kn/console/article/type";
+import {getRkArticle} from "@/api/ruankao/home/home";
+import {RkArticleVO} from "@/views/console/ruankao/article/type";
 import {checkIsMobile, doScrollToTop, isMobile} from "@/utils/util";
-import {setStorageArticle} from "./main";
+import {setRkStorageArticle} from "./main";
 
 
 const sidebarRef = ref(null)
@@ -150,7 +150,7 @@ const title = ref<TitleItem>('')
 const route = useRoute()
 const menuId = ref<number>(route.query.menuId || null)
 const tocList = ref<Array<{ id: string, title: string, level: number }>>([])
-const articleContent = ref<ArticleVO>({} as ArticleVO)
+const articleContent = ref<RkArticleVO>({} as RkArticleVO)
 
 // 控制侧边栏显示/隐藏的状态
 const isSidebarHidden = ref(false)
@@ -181,7 +181,7 @@ const handleArticleSelected = async (article: number) => {
     title: title.value.title,
     timestamp: Date.now()
   };
-  sessionStorage.setItem('selectedArticle', JSON.stringify(articleInfo));
+  sessionStorage.setItem('selectedRkArticle', JSON.stringify(articleInfo));
 
   await loadArticleContent()
 }
@@ -250,7 +250,7 @@ const loadArticleContent = async () => {
 
   try {
     // 获取文章内容
-    const articleData = await getArticle({articleId: title.value.articleId})
+    const articleData = await getRkArticle({articleId: title.value.articleId})
     articleContent.value = articleData
     console.log('文章内容:', articleData)
 
@@ -264,7 +264,7 @@ const loadArticleContent = async () => {
 const checkFirstArticle = () => {
   if (sidebarRef.value && sidebarRef.value.firstArticle) {
     title.value = sidebarRef.value.firstArticle
-    setStorageArticle(menuId.value, sidebarRef.value.firstArticle.menuId, sidebarRef.value.firstArticle.articleId, sidebarRef.value.firstArticle.title)
+    setRkStorageArticle(menuId.value, sidebarRef.value.firstArticle.menuId, sidebarRef.value.firstArticle.articleId, sidebarRef.value.firstArticle.title)
     loadArticleContent()
     return true; // 表示成功选中了第一个文章
   } else {
@@ -290,7 +290,7 @@ onMounted(() => {
 })
 
 const doMenuChange = () => {
-  const storedArticle = sessionStorage.getItem('selectedArticle');
+  const storedArticle = sessionStorage.getItem('selectedRkArticle');
   if (!storedArticle) {
     const shouldSelectFirst = route.query.selectFirst === 'true';
 
@@ -314,20 +314,20 @@ watch(
     let type = query.type || ''
 
     // 清空当前文章内容
-    articleContent.value = {} as ArticleVO;
+    articleContent.value = {} as RkArticleVO;
     title.value = {articleId: 0, title: ''};
     tocList.value = [];
 
     // 检查是否有存储的文章信息
     nextTick(() => {
       if (type == 'search') {
-        const storedArticle = sessionStorage.getItem('selectedArticle');
+        const storedArticle = sessionStorage.getItem('selectedRkArticle');
         if (storedArticle) {
           const article = JSON.parse(storedArticle);
           console.log('storedArticle', article)
           handleArticleSelected(article);
 
-          sidebarRef.value.checkHasSelectedArticle();
+          sidebarRef.value.checkHasselectedRkArticle();
         }
       } else {
         doMenuChange()

@@ -1,9 +1,9 @@
 // main.ts
 import {Router} from "vue-router";
 
-export const goToMainPage = (router: Router, rootMenuId: number, type: string, selectFirst: boolean = true) => {
+export const goToRkMainPage = (router: Router, rootMenuId: number, type: string, selectFirst: boolean = true) => {
   router.push({
-    name: 'main',
+    name: 'RkMain',
     query: {
       menuId: rootMenuId,
       selectFirst: selectFirst,
@@ -13,11 +13,11 @@ export const goToMainPage = (router: Router, rootMenuId: number, type: string, s
   });
 };
 
-export const getStorageArticle = () => {
-  return JSON.parse(sessionStorage.getItem('selectedArticle') || '{}');
+export const getRkStorageArticle = () => {
+  return JSON.parse(sessionStorage.getItem('selectedRkArticle') || '{}');
 };
 
-export const setStorageArticle = (rootMenuId: number, menuId: number, articleId: number, title: string) => {
+export const setRkStorageArticle = (rootMenuId: number, menuId: number, articleId: number, title: string) => {
   // 存储选中的文章信息
   const articleInfo = {
     rootMenuId: rootMenuId,
@@ -26,5 +26,5 @@ export const setStorageArticle = (rootMenuId: number, menuId: number, articleId:
     title: title,
     timestamp: Date.now()
   };
-  sessionStorage.setItem('selectedArticle', JSON.stringify(articleInfo));
+  sessionStorage.setItem('selectedRkArticle', JSON.stringify(articleInfo));
 };

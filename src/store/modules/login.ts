@@ -1,84 +1,31 @@
-/*
- * @Author: chenamin
- * @LastModifiedBy: chenamin
- * @Date: 2024-11-28 19:57:12
- * @LastEditTime: 2024-12-27 18:00:45
- * @FilePath: /cbdt-data-classification-categorization-front/src/store/modules/login.ts
- * @Description: file content
- */
+// src/store/modules/login.ts
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { RouteRecordRaw } from 'vue-router'
 import { store } from '@/store'
-import { resetRouter, router } from '@/router'
-import { encrypt, getMenuInfoMap, getFirstUrl } from '@/utils/index'
-import { onLogin, onLogout, onSSO, getRandomCode } from '@/api/login/login'
+import { router } from '@/router'
+import { encrypt } from "@/utils"
+import { getRandomCode, onLogin, onLogout } from "@/api/console/login/login"
 
 export const useLoginStore = defineStore(
   'login',
   () => {
     const token = ref<string>()
-    const passToken = ref<boolean>(false)
-    // const menus = ref<RouteRecordRaw[]>(JSON.parse(sessionStorage.getItem('_menus') || '[]'))
-    // const menusMap = ref(JSON.parse(sessionStorage.getItem('_menusMap') || '{}'))
     const userName = ref('')
-    // const customLastMenu = ref<null | { menuName: string }>(null)
-    // const loginPageUrl = ref(sessionStorage.getItem('_loginPageUrl') || '')
 
     // 清空登录态(token、userName...)
     const clearLoginStatus = () => {
-      token.value = ''
+      token.value = undefined
       userName.value = ''
-      // menusMap.value = {}
-      // menus.value = []
-      // resetRouter()
-      setTimeout(() => {
-        sessionStorage.clear()
-      })
+      sessionStorage.removeItem('_token')
+      localStorage.removeItem('token')
+      localStorage.removeItem('userInfo')
     }
-    // save token
+
+    // 保存 token
     const setToken = (_token: string) => {
       token.value = _token
       sessionStorage.setItem('_token', _token)
     }
-    // SSO
-    // const sso = async () => {
-    //   try {
-    //     let firstUrl
-    //     const res = await onSSO({})
-    //
-    //     console.log(res)
-    //
-    //     const { menusAuthList = [], userName: _userName, responseCode: responseCode, loginPageUrl: _loginPageUrl } = res || {}
-    //
-    //     if (responseCode === 200) {
-    //       const _menusMap = getMenuInfoMap({ menusList: menusAuthList })
-    //
-    //       sessionStorage.setItem('_menusMap', JSON.stringify(_menusMap))
-    //       sessionStorage.setItem('_menus', JSON.stringify(menusAuthList))
-    //       sessionStorage.setItem('_loginPageUrl', _loginPageUrl)
-    //       console.log('_loginPageUrl', _loginPageUrl)
-    //
-    //       menus.value = menusAuthList
-    //       menusMap.value = _menusMap
-    //       userName.value = _userName
-    //       loginPageUrl.value = _loginPageUrl
-    //       firstUrl = getFirstUrl(menusAuthList)
-    //     } else if (responseCode === 401 && loginPageUrl) {
-    //       window.location.href = _loginPageUrl
-    //       return
-    //     } else {
-    //       firstUrl = 'no-permission'
-    //     }
-    //
-    //     return Promise.resolve({
-    //       firstUrl,
-    //       response: res
-    //     })
-    //   } catch (error) {
-    //     return Promise.reject(error)
-    //   }
-    // }
 
     const login = async (params: API.LoginDto) => {
       try {
@@ -86,20 +33,18 @@ export const useLoginStore = defineStore(
         const userPwd = encrypt(params.passwordValue, randomCode)
         const username = params.usernameValue
         const res = await onLogin({ username, userPwd, randomId })
-        const { menuList = [], userName: _userName } = res || []
-        // const _menusMap = getMenuInfoMap({ menusList: menuList })
-        // const hasPermission = Object.values(_menusMap).some((item: any) => item.viewable)
-        //
-        // if (!hasPermission) {
-        //   // message.error('This is an error message')
-        //   return
-        // }
-        // sessionStorage.setItem('_menusMap', JSON.stringify(_menusMap))
+
+        const { menuList = [], userName: _userName, token: resToken } = res || []
+
+        // 设置token到store和localStorage
+        if (resToken) {
+          setToken(resToken)
+          localStorage.setItem('token', resToken)
+        }
+
         sessionStorage.setItem('_menus', JSON.stringify(menuList))
-        sessionStorage.setItem('username', res.username)
-        // menus.value = menusAuthList
-        // menusMap.value = _menusMap
-        // userName.value = _userName
+        sessionStorage.setItem('username', _userName)
+        userName.value = _userName
         const firstUrl = menuList[0]
 
         return Promise.resolve({
@@ -112,8 +57,11 @@ export const useLoginStore = defineStore(
     }
 
     const logout = async () => {
-      await onLogout({ userName: userName.value })
-      jumpToLogin()
+      try {
+        await onLogout({ userName: userName.value })
+      } finally {
+        jumpToLogin()
+      }
     }
 
     const jumpToLogin = () => {
@@ -122,27 +70,30 @@ export const useLoginStore = defineStore(
         path: '/login'
       })
     }
-    const jumpToNoAuth = () => {
-      router.push({
-        path: '/noAuth'
-      })
 
+    // 处理未授权情况，根据服务类型跳转到不同的登录页面
+    const jumpToNoAuth = (serviceType?: string) => {
+      // 清除认证信息
+      clearLoginStatus()
+
+      // 根据服务类型跳转到不同的登录页面
+      if (serviceType === 'ruankao') {
+        router.push('/rk/login')
+      } else {
+        // 其他服务默认跳转到通用登录页
+        router.push('/login')
+      }
     }
 
     return {
       token,
-      // menusMap,
-      // menus,
       userName,
-      // customLastMenu,
-      // loginPageUrl,
       login,
       logout,
       setToken,
       clearLoginStatus,
       jumpToNoAuth,
-      // jumpToSso,
-      // sso
+      jumpToLogin
     }
   },
   {
@@ -154,10 +105,4 @@ export const useLoginStore = defineStore(
 
 export function useLoginStoreWithOut() {
   return useLoginStore(store)
-}
-
-interface MenuItem {
-  menuCode: string;
-  menuName: string;
-  menuUrl: string;
 }

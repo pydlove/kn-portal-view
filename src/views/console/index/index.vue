@@ -104,7 +104,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { doLogin } from '@/api/index/index'
+import { doLogin } from '@/api/console/index/index'
 import md5 from 'crypto-js/md5'
 
 // 定义导航项类型
@@ -194,7 +194,23 @@ const navItems = ref<NavItem[]>([
     icon: 'fas fa-clipboard-list',
     path: '/exam/calendar',
     color: '#858796'
-  }
+  },
+  {
+    id: 6,
+    title: '考试菜单管理',
+    description: '查看考试菜单管理',
+    icon: 'fas fa-users',
+    path: '/rk/menu',
+    color: '#c9103b'
+  },
+  {
+    id: 6,
+    title: '考试文章管理',
+    description: '查看考试文章管理',
+    icon: 'fas fa-chart-bar',
+    path: '/rk/article',
+    color: '#1127c4'
+  },
 ])
 
 // 检查登录状态

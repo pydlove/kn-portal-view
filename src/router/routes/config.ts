@@ -27,21 +27,30 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
     component: () => import('@/views/kn/main/index.vue')
   },
 
-
   {
     path: '/rk/home',
-    name: 'rkHome',
+    name: 'RkHome',
     component: () => import('@/views/ruankao/home/index.vue')
   },
   {
     path: '/rk/main',
-    name: 'rkMain',
+    name: 'RkMain',
     component: () => import('@/views/ruankao/main/index.vue')
   },
   {
     path: '/rk/study-task',
     name: 'StudyTask',
     component: () => import('@/views/ruankao/home/StudyTask.vue')
+  },
+  {
+    path: '/rk/login',
+    name: 'RkLogin',
+    component: () => import('@/views/ruankao/home/LoginPage.vue'),
+    meta: {
+      title: '用户登录',
+      requiresAuth: false,
+      hideHeader: true
+    }
   },
 
 
@@ -67,30 +76,30 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
     path: '/menu',
     name: 'menu',
     meta: {hideHeader: true},
-    component: () => import('@/views/console/menu/index.vue')
+    component: () => import('@/views/console/kn/menu/index.vue')
   },
   {
     path: '/article',
     name: 'article',
     meta: {hideHeader: true},
-    component: () => import('@/views/console/article/index.vue')
+    component: () => import('@/views/console/kn/article/index.vue')
   },
   {
     path: '/question',
     name: 'Question',
     meta: {hideHeader: true},
-    component: () => import('@/views/console/question/index.vue')
+    component: () => import('@/views/console/kn/question/index.vue')
   },
   {
     path: '/template',
     name: 'Template',
     meta: {hideHeader: true},
-    component: () => import('@/views/console/template/index.vue'),
+    component: () => import('@/views/console/kn/template/index.vue'),
   },
   {
     path: '/exam/question',
     name: 'ExamQuestion',
-    component: () => import('@/views/console/exam/index.vue'),
+    component: () => import('@/views/console/ruankao/exam/index.vue'),
     meta: {
       title: '题库管理',
       hideHeader: true
@@ -99,7 +108,7 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
   {
     path: '/exam/question/create',
     name: 'ExamQuestionCreate',
-    component: () => import('@/views/console/exam/create.vue'),
+    component: () => import('@/views/console/ruankao/exam/create.vue'),
     meta: {
       title: '创建题目',
       hideHeader: true
@@ -108,7 +117,7 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
   {
     path: '/exam/question/edit/:id',
     name: 'ExamQuestionEdit',
-    component: () => import('@/views/console/exam/edit.vue'),
+    component: () => import('@/views/console/ruankao/exam/edit.vue'),
     meta: {
       title: '编辑题目',
       hideHeader: true
@@ -117,10 +126,28 @@ export const BASIC_ROUTES: Array<RouteRecordRaw> = [
   {
     path: '/exam/calendar',
     name: 'ExamCalendar',
-    component: () => import('@/views/console/calendar/ConsoleExamCalendar.vue'),
+    component: () => import('@/views/console/ruankao/calendar/ConsoleExamCalendar.vue'),
     meta: {
       title: '考试日历管理',
       hideHeader: true
     }
-  }
+  },
+  {
+    path: '/rk/menu',
+    name: 'RkMenu',
+    component: () => import('@/views/console/ruankao/menu/index.vue'),
+    meta: {
+      title: '考试日志管理',
+      hideHeader: true
+    }
+  },
+  {
+    path: '/rk/article',
+    name: 'RkArticle',
+    component: () => import('@/views/console/ruankao/article/index.vue'),
+    meta: {
+      title: '考试文章管理',
+      hideHeader: true
+    }
+  },
 ]

@@ -50,8 +50,8 @@
 
 <script setup lang="ts">
 import {onBeforeUnmount, onMounted, ref} from "vue";
-import {getMenuPage} from "@/api/menu/menu";
-import {searchArticleFulltext} from "@/api/home/home";
+import {getMenuPage} from "@/api/kn/menu/menu";
+import {searchArticleFulltext} from "@/api/kn/home/home";
 
 interface SearchResult {
   id: number;

@@ -1,198 +1,199 @@
-import axios, { AxiosInstance } from 'axios'
-import Qs from 'qs' // Import the qs module to serialize post type data
+// src/utils/request.ts
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
+import Qs from 'qs'
 import { checkStatus } from './index'
 import { useLoginStoreWithOut } from '@/store/modules/login'
 import { useGlobalStoreWithOut } from '@/store/modules/global'
 import { message } from 'ant-design-vue'
-import { useRouter } from 'vue-router'
 
-interface IApiConfig {
-  url: string
-  method?: string
-  data?: any
+// 定义服务基础URL常量
+export const SERVICE_BASE_URLS = {
+  DEFAULT: '/kn-service',
+  RUANKAO: '/ruankao-service'
+  // 可以继续添加其他服务的baseURL
+} as const
+
+// API配置接口
+interface IApiConfig extends AxiosRequestConfig {
   setRepeatLoading?: {
     repeatSubmit: boolean
   }
-  baseURL?: string
-  isHandleError?: string // Whether to handle interface failure uniformly (prompt information)
-  [x: string]: any
+  isHandleError?: boolean // 是否统一处理接口失败（提示信息）
 }
 
-// Configuration for canceling duplicate requests
-let cancel,
-  promiseArr = {}
-const CancelToken = axios.CancelToken
-const source = CancelToken.source()
-
+// 默认请求头
 const defaultHeader = {
   'Cache-Control': 'no-cache',
   Accept: 'application/json',
   'Content-Type': 'application/json;charset=utf-8'
 }
 
-const service: AxiosInstance = axios?.create({
-  timeout: 300000,
-  headers: {
-    ...defaultHeader
-  }
-})
-
-service.interceptors.request.use(
-  (config) => {
-    // Add token to request header
-    const loginStore = useLoginStoreWithOut()
-    const token = loginStore.token
-
-    // console.log(token, ' request token ')
-    if (token && config.headers) {
-      config.headers['token'] = token
+// 创建请求实例的工厂函数
+function createService(baseURL: string): AxiosInstance {
+  const service: AxiosInstance = axios.create({
+    baseURL,
+    timeout: 300000,
+    headers: {
+      ...defaultHeader
     }
-    // Globally add cancelToken
-    config.cancelToken = source.token
-    cancel = source.cancel
-    // Cancel the ongoing identical request when a new request is initiated
-    if (promiseArr[config.url]) {
-      // promiseArr[config.url] = cancel
-    } else {
-      promiseArr[config.url] = cancel
-    }
+  })
 
-    // Check if current route is ruankao related and modify URL accordingly
-    // if (typeof window !== 'undefined' && window.location) {
-    //   const currentPath = window.location.pathname;
-    //   // If route is related to ruankao or starts with /rk, prepend 'rk' to the URL
-    //   if (currentPath.startsWith('/cc/rk')) {
-    //     config.url = '/rk' + config.url;
-    //   }
-    // }
+  // 请求拦截器
+  service.interceptors.request.use(
+    (config) => {
+      // 添加token到请求头
+      const loginStore = useLoginStoreWithOut()
 
-    if (['post', 'delete', 'patch', 'put'].includes(config.method.toLocaleLowerCase())) {
-      const contentType = config.headers['Content-Type']
-      // Convert data format based on Content-Type
-      if (typeof contentType === 'string') {
-        if (contentType.includes('multipart')) {
-          // type 'multipart/form-data;'
-          // config.data = data;
-        } else if (contentType.includes('json')) {
-          // type 'application/json;'
-          // raw body "{name:"nowThen",age:"18"}"(ordinary string)
-          config.data = JSON.stringify(config.data)
-        } else {
-          // type 'application/x-www-form-urlencoded;'
-          // raw body name=nowThen&age=18
-          config.data = Qs.stringify(config.data)
+      // 优先从store获取token，其次从sessionStorage获取
+      let token = loginStore.token
+      if (!token) {
+        token = sessionStorage.getItem('_token') || localStorage.getItem('token') || ''
+        if (token) {
+          loginStore.setToken(token)
         }
       }
-    }
-    return config
-  },
-  (error) => {
-    console.error('Request Error:', error)
-    return Promise.reject(error)
-  }
-)
 
-service.interceptors.response.use(
-  (response) => {
-    const loginStore = useLoginStoreWithOut()
-    const { token } = response.headers
-
-    // console.log(token, ' request token ')
-    if (token) {
-      loginStore.setToken(token)
-    }
-
-    // Interface status is 401
-    const { status } = response || {}
-    // Token verification failed, re-login or request timed out, redirect to login page
-    if (status === 401 || status === 408) {
-      promiseArr = {}
-      loginStore.jumpToNoAuth()
-      return Promise.resolve({})
-    }
-    if (response) {
-      return Promise.resolve(checkStatus(response))
-    }
-  },
-  (error) => {
-    // console.error('Response Error:', error)
-    if (axios.isCancel(error)) {
-      return Promise.reject({ msg: error.message || 'Request Cancel' })
-    }
-    if (error.response) {
-      const { status } = error.response
-      // Determine if authentication fails, redirect to login page if so
-      if (status === 401) {
-        const loginStore = useLoginStoreWithOut()
-        // message.error('The user information is invalid. Please login again')
-        loginStore.jumpToNoAuth()
-        return
+      if (token && config.headers) {
+        config.headers['token'] = token
       }
-      if (status === 400) {
-        console.log(error.response.data)
-        message.error({ content: error.response.data.data, key: 'error' })
+
+      // 数据格式转换
+      if (['post', 'delete', 'patch', 'put'].includes(config.method?.toLowerCase() || '')) {
+        const contentType = config.headers['Content-Type']
+        if (typeof contentType === 'string') {
+          if (contentType.includes('multipart')) {
+            // multipart/form-data 类型处理
+          } else if (contentType.includes('json')) {
+            // application/json 类型处理
+            config.data = JSON.stringify(config.data)
+          } else {
+            // application/x-www-form-urlencoded 类型处理
+            config.data = Qs.stringify(config.data)
+          }
+        }
       }
-      return Promise.reject(error.response?.data)
-    } else if (error.code === 'ECONNABORTED' && error.message.indexOf('timeout') !== -1) {
-      promiseArr = {}
-      // setTimeout(() => {
-      //   jumpToLogin()
-      // }, 3000)
-      return Promise.reject({ msg: 'Request Timeout' })
-    } else {
+      return config
+    },
+    (error) => {
+      console.error('Request Error:', error)
       return Promise.reject(error)
     }
-  }
-)
+  )
 
-/**
- * @description:
- * @param {*} opt
- * @param {*} isThrowErr
- * @return {*}
- */
-const request = async (opt: IApiConfig, isThrowErr = true) => {
+  // 响应拦截器
+  service.interceptors.response.use(
+    (response) => {
+      const loginStore = useLoginStoreWithOut()
+      const { token } = response.headers
+
+      if (token) {
+        loginStore.setToken(token)
+        localStorage.setItem('token', token)
+      }
+
+      const { status } = response || {}
+      // Token验证失败或请求超时，重定向到登录页
+      if (status === 401 || status === 408) {
+        // 根据 baseURL 判断是哪个服务返回的 401
+        const baseURL = response?.config?.baseURL || ''
+        if (baseURL.includes(SERVICE_BASE_URLS.RUANKAO)) {
+          loginStore.jumpToNoAuth('ruankao')
+        } else {
+          loginStore.jumpToNoAuth()
+        }
+        return Promise.resolve({})
+      }
+
+      if (response) {
+        return Promise.resolve(checkStatus(response))
+      }
+    },
+    (error) => {
+      if (axios.isCancel(error)) {
+        return Promise.reject({ msg: error.message || 'Request Cancel' })
+      }
+
+      if (error.response) {
+        const { status, config } = error.response
+        // 认证失败处理
+        if (status === 401) {
+          const loginStore = useLoginStoreWithOut()
+          // 根据请求的 baseURL 判断是哪个服务
+          const baseURL = config?.baseURL || ''
+          if (baseURL.includes(SERVICE_BASE_URLS.RUANKAO)) {
+            loginStore.jumpToNoAuth('ruankao')
+          } else {
+            loginStore.jumpToNoAuth()
+          }
+          return
+        }
+
+        if (status === 400) {
+          message.error({ content: error.response.data.data, key: 'error' })
+        }
+        return Promise.reject(error.response?.data)
+      } else if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+        return Promise.reject({ msg: 'Request Timeout' })
+      } else {
+        return Promise.reject(error)
+      }
+    }
+  )
+
+  return service
+}
+
+// 为不同服务创建请求实例
+const services = {
+  default: createService(SERVICE_BASE_URLS.DEFAULT),
+  ruankao: createService(SERVICE_BASE_URLS.RUANKAO)
+  // 可以继续添加其他服务实例
+}
+
+// 通用请求函数
+const request = async (serviceType: keyof typeof services, opt: IApiConfig, isThrowErr = true) => {
   const globalStore = useGlobalStoreWithOut()
   const { setRepeatLoading, headers = {}, ...restOpt } = opt || {}
-  let options = {
+
+  let options: AxiosRequestConfig = {
     method: 'get',
-    isHandleError: true,
-    headers: { ...defaultHeader, ...headers },
-    baseURL: '/kn-service',
-    ...restOpt
+    ...restOpt,
+    headers: { ...defaultHeader, ...headers }
   }
 
   const { repeatSubmit } = setRepeatLoading || {}
-  // Prevent duplicates
+
+  // 防止重复提交
   if (repeatSubmit && globalStore.repeatSubmit) {
     return
   }
+
   try {
-    if (['get'].includes(options.method.toLowerCase())) {
+    if (options.method?.toLowerCase() === 'get') {
       options.params = { ...options.data }
     }
-    // remove spaces before and after parameter values and parameters with null values before the request
-    // moveSpaceBeforeAndAfter(options.params)
 
     if (repeatSubmit) {
       globalStore.setRepeatSubmit(true)
     }
+
+    const service = services[serviceType] || services.default
     const res = await service(options)
-    delete promiseArr[options.url]
 
     const { data } = res
     return data
   } catch (err: any) {
-    // handle response message
+    // 处理响应错误
     console.log(err, 'err')
     const { error } = err
     const { message: messageText = '' } = (error as { code?: number; message?: string }) || {}
-    if (options.isHandleError) {
+
+    if (opt.isHandleError !== false) {
       if (messageText) {
         message.error({ content: messageText, key: 'error' })
       }
     }
-    delete promiseArr[options.url]
+
     if (isThrowErr) {
       throw error
     } else {
@@ -204,5 +205,16 @@ const request = async (opt: IApiConfig, isThrowErr = true) => {
     }
   }
 }
+
+// 导出针对不同服务的请求方法
+export const defaultRequest = (opt: IApiConfig, isThrowErr = true) =>
+  request('default', opt, isThrowErr)
+
+export const ruankaoRequest = (opt: IApiConfig, isThrowErr = true) =>
+  request('ruankao', opt, isThrowErr)
+
+// 如果需要添加新服务，可以这样扩展：
+// export const newServiceRequest = (opt: IApiConfig, isThrowErr = true) =>
+//   request('newService', opt, isThrowErr)
 
 export default request

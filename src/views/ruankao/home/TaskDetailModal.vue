@@ -96,7 +96,7 @@
               完成
             </button>
             <button
-              v-else-if="currentQuestion?.type === 'CHOICE' && !showAnswer"
+              v-else-if="currentQuestion?.type === 'CHOICE' && !isAnswerSubmitted(currentQuestion.id)"
               class="btn submit-btn"
               @click="submitAnswer"
               :disabled="!selectedChoice"
@@ -104,7 +104,7 @@
               确定
             </button>
             <button
-              v-else-if="currentQuestion?.type === 'CHOICE' && showAnswer"
+              v-else-if="currentQuestion?.type === 'CHOICE' && isAnswerSubmitted(currentQuestion.id)"
               class="btn next-btn"
               @click="nextQuestion"
             >
@@ -151,7 +151,10 @@
 
 <script setup lang="ts">
 import {ref, computed, watch} from 'vue'
-import {getCalendarDateQuestionDetail} from '@/api/calendar/calendarDate'
+import {
+  finishTask,
+  getCalendarDateQuestionDetail
+} from '@/api/ruankao/calendar/calendarDate'
 import { marked } from 'marked'
 import ResultModal from './ResultModal.vue'
 import PracticeResultModal from './PracticeResultModal.vue'
@@ -233,6 +236,12 @@ const showResult = ref(false)
 const score = ref(0)
 const correctCount = ref(0)
 const userAnswers = ref<{ [key: number]: string }>({})
+const submittedQuestions = ref<Set<number>>(new Set()) // 记录已提交答案的题目ID
+
+// 预加载相关
+const preloadCache = ref<{[pageNum: number]: RkExamQuestionDetailPageVO[]}>({})
+const currentPreloadPage = ref(1)
+const totalRecords = ref(0)
 
 // 配置marked
 marked.setOptions({
@@ -289,6 +298,12 @@ const questionTypeClass = computed(() => {
   return classMap[currentQuestion.value?.type || ''] || ''
 })
 
+// 检查题目答案是否已提交
+const isAnswerSubmitted = (questionId?: number) => {
+  if (!questionId) return false
+  return submittedQuestions.value.has(questionId) || showAnswer.value
+}
+
 // 是否为正确答案
 const isCorrect = (optionKey: string) => {
   if (!currentQuestion.value?.questionChoice?.correctAnswers) return false
@@ -297,7 +312,7 @@ const isCorrect = (optionKey: string) => {
 
 // 选择选项
 const selectOption = (key: string) => {
-  if (currentQuestion.value?.type === 'CHOICE' && !showAnswer.value) {
+  if (currentQuestion.value?.type === 'CHOICE' && !isAnswerSubmitted(currentQuestion.value.id)) {
     selectedChoice.value = key
   }
 }
@@ -312,9 +327,19 @@ const toggleEssayAnswer = () => {
   showEssayAnswer.value = !showEssayAnswer.value
 }
 
+const finish = async () => {
+
+  // 获取完成的任务id，也就是calendar_id
+  const calendarId = props.task?.id;
+  console.log('calendarId', calendarId)
+
+  await finishTask({calendarId: calendarId});
+}
+
 // 完成文章阅读
 const finishArticle = () => {
   closeModal()
+  finish()
 }
 
 // 提交答案
@@ -327,6 +352,7 @@ const submitAnswer = async () => {
   // 保存用户答案
   if (currentQuestion.value?.id && selectedChoice.value) {
     userAnswers.value[currentQuestion.value.id] = selectedChoice.value;
+    submittedQuestions.value.add(currentQuestion.value.id); // 标记为已提交
 
     // 检查答案是否正确
     if (isCorrect(selectedChoice.value)) {
@@ -338,41 +364,129 @@ const submitAnswer = async () => {
   showAnswer.value = true;
 }
 
+// 预加载下一批题目
+const preloadNextBatch = async (pageNum: number) => {
+  if (preloadCache.value[pageNum]) {
+    return; // 已经预加载过
+  }
+
+  try {
+    const response = await getCalendarDateQuestionDetail(props.task!.id, {
+      pageNum: pageNum,
+      pageSize: 5
+    });
+
+    preloadCache.value[pageNum] = response.records || [];
+    totalRecords.value = response.total || 0;
+  } catch (error) {
+    console.error('预加载题目失败:', error);
+  }
+}
+
 // 加载下一题
 const loadNextQuestion = async () => {
-  if (currentIndex.value < totalQuestions.value - 1) {
-    try {
-      detailLoading.value = true;
-      // 修正：使用 currentIndex.value + 2 作为页码，因为页码从1开始，而 currentIndex 从0开始
-      const response = await getCalendarDateQuestionDetail(props.task!.id, {
-        pageNum: currentIndex.value + 2,
-        pageSize: 1
-      });
+  // 检查是否需要预加载下一批题目
+  const nextIndex = currentIndex.value + 1;
+  const nextPage = Math.floor(nextIndex / 5) + 1;
 
-      if (response.records && response.records.length > 0) {
-        // 替换当前题目列表中的下一题
-        if (questionList.value.length > currentIndex.value + 1) {
-          questionList.value[currentIndex.value + 1] = response.records[0];
-        } else {
-          questionList.value.push(response.records[0]);
+  // 如果是当前批次的最后一题，预加载下一批
+  if ((nextIndex + 1) % 5 === 0) {
+    preloadNextBatch(nextPage + 1);
+  }
+
+  // 如果下一道题已经在缓存中，直接使用
+  if (nextIndex < questionList.value.length) {
+    currentIndex.value++;
+    selectedChoice.value = null;
+    showAnswer.value = false;
+    showCaseAnswer.value = false;
+    showEssayAnswer.value = false;
+
+    // 检查是否之前答过这题
+    const nextQuestion = questionList.value[nextIndex];
+    if (nextQuestion.id) {
+      if (userAnswers.value[nextQuestion.id]) {
+        selectedChoice.value = userAnswers.value[nextQuestion.id];
+      }
+      // 如果题目已提交，显示答案
+      if (submittedQuestions.value.has(nextQuestion.id)) {
+        showAnswer.value = true;
+      }
+    }
+    return;
+  }
+
+  // 如果需要从服务器加载新题目
+  const currentPage = Math.floor(nextIndex / 5) + 1;
+
+  // 检查缓存中是否有该页数据
+  if (preloadCache.value[currentPage]) {
+    // 从缓存中获取数据
+    const cachedQuestions = preloadCache.value[currentPage];
+    const questionIndexInPage = nextIndex % 5;
+
+    if (questionIndexInPage < cachedQuestions.length) {
+      questionList.value.push(cachedQuestions[questionIndexInPage]);
+      currentIndex.value++;
+      selectedChoice.value = null;
+      showAnswer.value = false;
+      showCaseAnswer.value = false;
+      showEssayAnswer.value = false;
+
+      // 检查是否之前答过这题
+      const nextQuestion = cachedQuestions[questionIndexInPage];
+      if (nextQuestion.id) {
+        if (userAnswers.value[nextQuestion.id]) {
+          selectedChoice.value = userAnswers.value[nextQuestion.id];
         }
+        // 如果题目已提交，显示答案
+        if (submittedQuestions.value.has(nextQuestion.id)) {
+          showAnswer.value = true;
+        }
+      }
+      return;
+    }
+  }
 
+  // 如果缓存中没有，从服务器加载
+  try {
+    detailLoading.value = true;
+    const response = await getCalendarDateQuestionDetail(props.task!.id, {
+      pageNum: currentPage,
+      pageSize: 5
+    });
+
+    if (response.records && response.records.length > 0) {
+      // 缓存这一页的数据
+      preloadCache.value[currentPage] = response.records;
+      totalRecords.value = response.total || 0;
+
+      const questionIndexInPage = nextIndex % 5;
+      if (questionIndexInPage < response.records.length) {
+        questionList.value.push(response.records[questionIndexInPage]);
         currentIndex.value++;
         selectedChoice.value = null;
         showAnswer.value = false;
-        showCaseAnswer.value = false; // 重置案例题答案显示状态
-        showEssayAnswer.value = false; // 重置论文题答案显示状态
+        showCaseAnswer.value = false;
+        showEssayAnswer.value = false;
 
         // 检查是否之前答过这题
-        if (response.records[0].id && userAnswers.value[response.records[0].id]) {
-          selectedChoice.value = userAnswers.value[response.records[0].id];
+        const nextQuestion = response.records[questionIndexInPage];
+        if (nextQuestion.id) {
+          if (userAnswers.value[nextQuestion.id]) {
+            selectedChoice.value = userAnswers.value[nextQuestion.id];
+          }
+          // 如果题目已提交，显示答案
+          if (submittedQuestions.value.has(nextQuestion.id)) {
+            showAnswer.value = true;
+          }
         }
       }
-    } catch (error) {
-      console.error('加载下一题失败:', error);
-    } finally {
-      detailLoading.value = false;
     }
+  } catch (error) {
+    console.error('加载下一题失败:', error);
+  } finally {
+    detailLoading.value = false;
   }
 }
 
@@ -382,19 +496,40 @@ const fetchTaskDetail = async () => {
 
   try {
     detailLoading.value = true
-    const response = await getCalendarDateQuestionDetail(props.task.id, {pageNum: 1, pageSize: 1})
+    const response = await getCalendarDateQuestionDetail(props.task.id, {pageNum: 1, pageSize: 5})
 
     questionList.value = response.records || []
     totalQuestions.value = response.total || 0
+    totalRecords.value = response.total || 0
     currentIndex.value = 0
     selectedChoice.value = null
     showAnswer.value = false
-    showCaseAnswer.value = false; // 初始化案例题答案显示状态
-    showEssayAnswer.value = false; // 初始化论文题答案显示状态
+    showCaseAnswer.value = false
+    showEssayAnswer.value = false
     showResult.value = false
     score.value = 0
     correctCount.value = 0
     userAnswers.value = {}
+    submittedQuestions.value = new Set() // 重置已提交题目记录
+
+    // 缓存第一页数据
+    preloadCache.value[1] = response.records || [];
+
+    // 预加载第二页数据
+    if (response.total && response.total > 5) {
+      preloadNextBatch(2);
+    }
+
+    // 检查第一题是否已答过
+    if (questionList.value.length > 0 && questionList.value[0].id) {
+      const firstQuestion = questionList.value[0];
+      if (userAnswers.value[firstQuestion.id]) {
+        selectedChoice.value = userAnswers.value[firstQuestion.id];
+      }
+      if (submittedQuestions.value.has(firstQuestion.id)) {
+        showAnswer.value = true;
+      }
+    }
   } catch (error) {
     console.error('获取任务详情失败:', error)
   } finally {
@@ -405,43 +540,34 @@ const fetchTaskDetail = async () => {
 // 上一题
 const prevQuestion = async () => {
   if (currentIndex.value > 0) {
-    try {
-      detailLoading.value = true
-      // 修正：使用 currentIndex.value 作为页码
-      const response = await getCalendarDateQuestionDetail(props.task!.id, {
-        pageNum: currentIndex.value,
-        pageSize: 1
-      })
+    currentIndex.value--
+    selectedChoice.value = null
+    showAnswer.value = false
+    showCaseAnswer.value = false
+    showEssayAnswer.value = false
 
-      if (response.records && response.records.length > 0) {
-        // 替换当前题目列表中的上一题
-        questionList.value[currentIndex.value - 1] = response.records[0];
-        currentIndex.value--
-        selectedChoice.value = null
-        showAnswer.value = false
-        showCaseAnswer.value = false; // 重置案例题答案显示状态
-        showEssayAnswer.value = false; // 重置论文题答案显示状态
-
-        // 检查是否之前答过这题
-        if (response.records[0].id && userAnswers.value[response.records[0].id]) {
-          selectedChoice.value = userAnswers.value[response.records[0].id];
-        }
+    // 检查是否之前答过这题
+    const currentQ = questionList.value[currentIndex.value];
+    if (currentQ.id) {
+      if (userAnswers.value[currentQ.id]) {
+        selectedChoice.value = userAnswers.value[currentQ.id];
       }
-    } catch (error) {
-      console.error('加载上一题失败:', error)
-    } finally {
-      detailLoading.value = false
+      // 如果题目已提交，显示答案
+      if (submittedQuestions.value.has(currentQ.id)) {
+        showAnswer.value = true;
+      }
     }
   }
 }
 
 // 下一题
 const nextQuestion = async () => {
-  // 如果是选择题且没有显示答案，则先保存当前答案再进入下一题
-  if (currentQuestion.value?.type === 'CHOICE' && !showAnswer.value) {
+  // 如果是选择题且没有提交答案，则先保存当前答案再进入下一题
+  if (currentQuestion.value?.type === 'CHOICE' && !isAnswerSubmitted(currentQuestion.value.id)) {
     // 保存用户答案（如果有的话）
     if (currentQuestion.value?.id && selectedChoice.value) {
       userAnswers.value[currentQuestion.value.id] = selectedChoice.value;
+      submittedQuestions.value.add(currentQuestion.value.id); // 标记为已提交
 
       // 检查答案是否正确
       if (isCorrect(selectedChoice.value)) {
@@ -453,14 +579,17 @@ const nextQuestion = async () => {
   // 如果是最后一题，显示结果或提交
   if (currentIndex.value === totalQuestions.value - 1) {
     // 如果是选择题且还没提交答案，先提交答案
-    if (currentQuestion.value?.type === 'CHOICE' && !showAnswer.value) {
+    if (currentQuestion.value?.type === 'CHOICE' && !isAnswerSubmitted(currentQuestion.value.id)) {
       if (selectedChoice.value) {
         submitAnswer();
       } else {
         // 没有选择答案，直接完成
         score.value = Math.round((correctCount.value / totalQuestions.value) * 100);
         showResult.value = true;
+
+        finish();
       }
+
       return;
     }
 
@@ -468,12 +597,14 @@ const nextQuestion = async () => {
     if (currentQuestion.value?.type === 'CHOICE') {
       score.value = Math.round((correctCount.value / totalQuestions.value) * 100);
     }
+
     showResult.value = true;
+    finish();
     return;
   }
 
-  // 如果是选择题且已经显示答案，或者不是选择题，直接加载下一题
-  if ((currentQuestion.value?.type === 'CHOICE' && showAnswer.value) || currentQuestion.value?.type !== 'CHOICE') {
+  // 如果是选择题且已经提交答案，或者不是选择题，直接加载下一题
+  if ((currentQuestion.value?.type === 'CHOICE' && isAnswerSubmitted(currentQuestion.value.id)) || currentQuestion.value?.type !== 'CHOICE') {
     await loadNextQuestion();
   } else {
     // 如果是选择题但还没提交答案，先提交答案
@@ -513,13 +644,17 @@ watch(() => props.task, (newTask) => {
     currentIndex.value = 0
     selectedChoice.value = null
     showAnswer.value = false
-    showCaseAnswer.value = false; // 重置案例题答案显示状态
-    showEssayAnswer.value = false; // 重置论文题答案显示状态
+    showCaseAnswer.value = false
+    showEssayAnswer.value = false
     totalQuestions.value = 0
     showResult.value = false
     score.value = 0
     correctCount.value = 0
     userAnswers.value = {}
+    submittedQuestions.value = new Set()
+    preloadCache.value = {}
+    currentPreloadPage.value = 1
+    totalRecords.value = 0
   }
 }, {immediate: true})
 </script>

@@ -128,7 +128,7 @@
 <script setup lang="ts">
 import {ref, onMounted, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
-import {getSubMenus} from "@/api/home/home";
+import {getSubMenus} from "@/api/kn/home/home";
 import {checkIsMobile, isMobile} from "@/utils/util";
 
 const props = defineProps<{

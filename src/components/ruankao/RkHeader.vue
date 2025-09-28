@@ -1,21 +1,21 @@
 <template>
   <a-layout-header class="app-header">
     <!-- Theme Toggle Button -->
-<!--    <div class="theme-toggle" @click="toggleTheme">-->
-<!--      {{ isLightTheme ? '🌙 暗色' : '☀️ 亮色' }}-->
-<!--    </div>-->
+    <!--    <div class="theme-toggle" @click="toggleTheme">-->
+    <!--      {{ isLightTheme ? '🌙 暗色' : '☀️ 亮色' }}-->
+    <!--    </div>-->
 
     <!-- 搜索按钮 -->
-<!--    <div class="search-toggle" @click="doOpenSearchModal">-->
-<!--      <img class="ss-icon" src="../assets/images/sousuo.png" />-->
-<!--      <span class="search-shortcut">Ctrl+K</span>-->
-<!--    </div>-->
+    <div class="search-toggle" @click="doOpenSearchModal">
+      <img class="ss-icon" src="../../assets/images/sousuo.png"/>
+      <span class="search-shortcut">Ctrl+K</span>
+    </div>
 
     <div class="menus-container">
       <!-- 新增 Logo 区域 -->
       <div class="logo-container" @click="goToHome">
         <img
-          src="../../assets/images/ruankao/raunkao-logo.png"
+          src="../../assets/images/logo2.png"
           :alt="siteName"
           class="logo-image"
         />
@@ -32,7 +32,6 @@
           </div>
         </div>
 
-        <!-- 侧边栏菜单 -->
         <div v-else class="sidebar" :class="{ 'active': !isSidebarOpen }">
           <!-- 侧边栏头部 - 包含关闭按钮 -->
           <div class="sidebar-header">
@@ -51,74 +50,134 @@
             >
               <span>{{ menu.menuName }}</span>
             </div>
+
+            <!-- 移动端用户菜单项 -->
+            <div
+              v-if="!isLoggedIn"
+              class="sidebar-item"
+              @click="showAuthModal = true"
+            >
+              <span>登录/注册</span>
+            </div>
+            <div
+              v-else
+              class="sidebar-item"
+              @click="goToUserCenter"
+            >
+              <span>个人中心</span>
+            </div>
+            <div
+              v-if="isLoggedIn"
+              class="sidebar-item"
+              @click="logout"
+            >
+              <span>退出登录</span>
+            </div>
           </nav>
         </div>
       </div>
 
       <!-- Navigation Bar -->
-<!--      <nav v-else class="navbar">-->
-<!--        <div class="nav-container">-->
+      <nav v-else class="navbar">
+        <div class="nav-container">
 
-<!--          &lt;!&ndash; 主要菜单项 &ndash;&gt;-->
-<!--          <div-->
-<!--            v-for="menu in mainMenuList"-->
-<!--            :key="menu.id"-->
-<!--            class="nav-item dropdown"-->
-<!--            :class="{ active: isActiveMenu(menu.id) }"-->
-<!--            @mouseenter="activeDropdown = menu.id"-->
-<!--            @mouseleave="activeDropdown = ''"-->
-<!--            @click.stop="goToMain(menu.id)"-->
-<!--          >-->
-<!--            <span>{{ menu.menuName }}</span>-->
-<!--          </div>-->
+          <!-- 主要菜单项 -->
+          <div
+            v-for="menu in mainMenuList"
+            :key="menu.id"
+            class="nav-item dropdown"
+            :class="{ active: isActiveMenu(menu.id) }"
+            @mouseenter="activeDropdown = menu.id"
+            @mouseleave="activeDropdown = ''"
+            @click.stop="goToMain(menu.id)"
+          >
+            <span>{{ menu.menuName }}</span>
+          </div>
 
-<!--          &lt;!&ndash; 更多菜单项 &ndash;&gt;-->
-<!--          <div-->
-<!--            v-if="moreMenuList.length > 0"-->
-<!--            class="nav-item dropdown"-->
-<!--            @mouseenter="activeDropdown = 'more'"-->
-<!--            @mouseleave="activeDropdown = ''"-->
-<!--          >-->
-<!--            <span>更多</span>-->
-<!--            <div-->
-<!--              v-show="activeDropdown === 'more'"-->
-<!--              class="dropdown-content"-->
-<!--            >-->
-<!--              <div class="dropdown-column">-->
-<!--                <div-->
-<!--                  v-for="menu in moreMenuList"-->
-<!--                  :key="menu.id"-->
-<!--                  class="dropdown-item"-->
-<!--                  @click.stop="goToMain(menu.id)"-->
-<!--                >-->
-<!--                  {{ menu.menuName }}-->
-<!--                </div>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </nav>-->
+          <!-- 更多菜单项 -->
+          <div
+            v-if="moreMenuList.length > 0"
+            class="nav-item dropdown"
+            @mouseenter="activeDropdown = 'more'"
+            @mouseleave="activeDropdown = ''"
+          >
+            <span>更多</span>
+            <div
+              v-show="activeDropdown === 'more'"
+              class="dropdown-content"
+            >
+              <div class="dropdown-column">
+                <div
+                  v-for="menu in moreMenuList"
+                  :key="menu.id"
+                  class="dropdown-item"
+                  @click.stop="goToMain(menu.id)"
+                >
+                  {{ menu.menuName }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
     </div>
 
-    <SearchTool ref="searchToolRef"
-                @handleSelectMenu="handleSelectMenu"
+    <!-- PC端用户入口 -->
+    <div v-if="!isMobile" class="user-entry-container">
+      <div v-if="!isLoggedIn" class="user-entry" @click="showAuthModal = true">
+        <span>登录/注册</span>
+      </div>
+      <div v-else class="user-dropdown">
+        <a-dropdown :trigger="['click']">
+          <div class="user-entry">
+            <span>{{ currentUser?.username }}</span>
+          </div>
+          <template #overlay>
+            <a-menu class="user-menu">
+              <a-menu-item key="logout" @click="logout">
+                <span>退出登录</span>
+              </a-menu-item>
+            </a-menu>
+          </template>
+        </a-dropdown>
+      </div>
+    </div>
+
+    <RkSearchTool ref="searchToolRef"
+                  @handleSelectMenu="handleSelectMenu"
     />
 
-    <MockInterview v-model:visible="showMockInterview" />
+    <MockInterview v-model:visible="showMockInterview"/>
+
+    <!-- 登录/注册弹窗 -->
+    <a-modal
+      v-model:open="showAuthModal"
+      :footer="null"
+      :width="700"
+      class="auth-modal"
+      :maskClosable="false"
+      :keyboard="false"
+    >
+      <UserAuth @close="showAuthModal = false" @login-success="handleLoginSuccess"/>
+    </a-modal>
   </a-layout-header>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
-import { getRootMenus } from "../../api/home/home.ts";
-import { useRouter, useRoute } from "vue-router";
-import { useGlobalStore } from "../../store/modules/global.ts";
-import { checkIsMobile, isMobile } from "../../utils/util.ts";
-import SearchTool from "../SearchTool.vue";
-import { goToMainPage } from "../../views/kn/main/main.ts";
+import {ref, onMounted, computed, onBeforeUnmount} from 'vue'
+import {getRkRootMenus} from "@/api/ruankao/home/home.ts";
+import {useRouter, useRoute} from "vue-router";
+import {useGlobalStore} from "../../store/modules/global.ts";
+import {checkIsMobile, isMobile} from "../../utils/util.ts";
+import RkSearchTool from "./RkSearchTool.vue";
+import {goToRkMainPage} from "../../views/ruankao/main/main.ts";
 import MockInterview from '../interview/MockInterview.vue';
+import UserAuth from './UserAuth.vue';
+import {useLoginStore} from '@/store/modules/login'
+import {onLogout} from "@/api/ruankao/login/login.ts"; // 导入登录store
 
 const globalStore = useGlobalStore()
+const loginStore = useLoginStore() // 使用登录store
 const isLightTheme = ref(false)
 const loading = ref(false)
 const menuList = ref([])
@@ -128,9 +187,10 @@ const activeDropdown = ref('')
 const isSidebarOpen = ref(false)
 const isHome = ref(true)
 const screenWidth = ref(window.innerWidth)
+const showAuthModal = ref(false)
 
 // Logo 相关属性
-const siteName = ref('软考通') // 文字 logo 或网站名称
+const siteName = ref('Momo 冲刺软考')
 
 // 跟踪当前激活的菜单ID
 const currentActiveMenuId = ref(route.query.menuId || '')
@@ -139,34 +199,41 @@ const searchToolRef = ref(null)
 
 const showMockInterview = ref(false);
 
+// 检查用户是否已登录
+const isLoggedIn = computed(() => {
+  // 检查用户的登录状态 - 使用store中的token
+  return !!loginStore.token
+})
+
+// 获取当前用户信息
+const currentUser = computed(() => {
+  const userInfo = localStorage.getItem('userInfo')
+  console.log('userInfo', userInfo)
+  return userInfo ? JSON.parse(userInfo) : null
+})
+
 // 计算主菜单和更多菜单
 const mainMenuList = computed(() => {
-  // 如果屏幕宽度大于等于1400px，显示所有菜单
-  if (screenWidth.value >= 1500 ) {
+  if (screenWidth.value >= 1500) {
     return menuList.value;
   }
 
-  // 如果菜单数量小于等于5，显示所有菜单
   if (menuList.value.length <= 5) {
     return menuList.value;
   }
 
-  // 否则只显示前5个菜单
   return menuList.value.slice(0, 5);
 });
 
 const moreMenuList = computed(() => {
-  // 如果屏幕宽度大于等于1400px，没有更多菜单
   if (screenWidth.value >= 1500) {
     return [];
   }
 
-  // 如果菜单数量小于等于5，没有更多菜单
   if (menuList.value.length <= 5) {
     return [];
   }
 
-  // 返回剩余的菜单项
   return menuList.value.slice(5);
 });
 
@@ -188,10 +255,9 @@ const resetMobileState = () => {
 
 // 处理搜索结果选择事件
 const handleSelectMenu = (rootMenuId, type, selectFirst) => {
-  // 切换菜单
   currentActiveMenuId.value = rootMenuId
 
-  goToMainPage(router, rootMenuId, type, selectFirst)
+  goToRkMainPage(router, rootMenuId, type, selectFirst)
 
   resetMobileState()
 }
@@ -204,9 +270,24 @@ const isActiveMenu = (menuId) => {
 // 跳转到首页
 const goToHome = () => {
   currentActiveMenuId.value = ''
-  router.push({name: 'rkHome'})
+  router.push({name: 'RkHome'})
 
   resetMobileState()
+}
+
+// 跳转到用户中心
+const goToUserCenter = () => {
+  router.push({name: 'UserCenter'})
+  showAuthModal.value = false
+}
+
+// 登录成功处理
+const handleLoginSuccess = (response) => {
+  // 保存用户信息到本地存储
+  loginStore.setToken(response.token) // 使用store设置token
+  localStorage.setItem('userInfo', JSON.stringify(response.user))
+  showAuthModal.value = false
+  window.location.reload()
 }
 
 // 切换侧边栏
@@ -219,8 +300,26 @@ const handleResize = () => {
   screenWidth.value = window.innerWidth;
 };
 
+// 用户退出登录
+const logout = async () => {
+  try {
+    // 调用后端退出登录接口
+    await onLogout({userName: currentUser.value?.username || ''})
+  } catch (error) {
+    console.error('退出登录接口调用失败:', error)
+  } finally {
+    // 清除本地存储的认证信息
+    loginStore.setToken('') // 清除store中的token
+    localStorage.removeItem('userInfo')
+    localStorage.removeItem('token')
+    sessionStorage.clear()
+
+    // 重新加载页面以确保状态完全清除
+    window.location.reload()
+  }
+}
+
 onMounted(() => {
-  // 添加窗口大小变化监听器
   checkIsMobile()
   window.addEventListener('resize', handleResize);
 
@@ -244,68 +343,25 @@ const toggleTheme = () => {
   globalStore.setIsLightTheme(isLightTheme.value)
 }
 
-/**
- * 添加跳转函数
- * @param menuId
- */
 const goToMain = (menuId) => {
   if (isMobile.value) {
     isHome.value = false
   }
 
-  sessionStorage.removeItem('selectedArticle');
-
+  sessionStorage.removeItem('selectedRkArticle');
   currentActiveMenuId.value = menuId
-
-  goToMainPage(router, menuId, 'menu')
+  goToRkMainPage(router, menuId, 'menu')
 }
 
 const fetchTableData = async () => {
   loading.value = true
   try {
-    menuList.value = await getRootMenus({})
+    menuList.value = await getRkRootMenus({})
   } catch (error) {
     console.error('获取数据失败:', error)
   } finally {
     loading.value = false
   }
-}
-
-const groupChildren = (childrenMenu) => {
-  if (!childrenMenu || childrenMenu.length === 0) return []
-
-  // 按照菜单名称中的关键词进行分组
-  const groups = []
-  const processed = new Set()
-
-  childrenMenu.forEach(item => {
-    if (processed.has(item.id)) return
-
-    // 提取菜单名称中的关键词作为分组标题
-    let title = item.menuName
-    if (item.menuName.includes('-')) {
-      title = item.menuName.split('-')[0]
-    }
-
-    // 查找同组的其他菜单项
-    const groupItems = childrenMenu.filter(menu => {
-      if (processed.has(menu.id)) return false
-      const menuTitle = menu.menuName.includes('-') ? menu.menuName.split('-')[0] : menu.menuName
-      return menuTitle === title
-    })
-
-    // 标记这些项已处理
-    groupItems.forEach(menu => processed.add(menu.id))
-
-    groups.push({
-      title: title,
-      items: groupItems
-    })
-  })
-
-  console.log("groups", groups)
-
-  return groups
 }
 
 // 暴露给父组件使用
@@ -315,14 +371,124 @@ defineExpose({
 })
 </script>
 
+<style>
+/* 登录/注册弹窗样式 */
+.auth-modal .ant-modal-content {
+  background-color: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.auth-modal .ant-modal-body {
+  padding: 0 !important;
+}
+
+.auth-modal .anticon-close {
+  font-size: 22px;
+  color: red;
+}
+</style>
+
 <style scoped>
+
+.user-entry-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* 用户入口样式 */
+.user-entry {
+  padding: 6px 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  color: white;
+  min-width: 80px;
+  text-align: center;
+}
+
+.user-entry:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+}
+
+.fullstack-page.light-theme .user-entry {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.fullstack-page.light-theme .user-entry:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* 用户下拉菜单 */
+.user-dropdown {
+  position: relative;
+}
+
+.user-menu {
+  margin-top: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.fullstack-page .user-menu {
+  background-color: #22272e;
+  color: #fff;
+}
+
+.fullstack-page.light-theme .user-menu {
+  background-color: #ffffff;
+  color: #333;
+}
+
+.user-menu :deep(.ant-dropdown-menu-item) {
+  padding: 10px 20px;
+  transition: all 0.3s ease;
+}
+
+.user-menu :deep(.ant-dropdown-menu-item:hover) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.fullstack-page .user-menu :deep(.ant-dropdown-menu-item:hover) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.fullstack-page.light-theme .user-menu :deep(.ant-dropdown-menu-item:hover) {
+  background-color: #f5f5f5;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .user-entry-container {
+    display: none;
+  }
+
+  /* 移动端侧边栏中的用户菜单项 */
+  .sidebar-item:last-child {
+    border-bottom: none;
+    margin-top: 10px;
+    background-color: #f0f0f0;
+    font-weight: bold;
+  }
+
+  .fullstack-page .sidebar-item:last-child {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
 
 .rm-icon {
   width: 36px;
   height: 36px;
   margin-right: 5px;
 }
-.ss-icon{
+
+.ss-icon {
   width: 18px;
   height: 18px;
 }
@@ -522,7 +688,7 @@ defineExpose({
 .search-toggle {
   position: fixed;
   top: 20px;
-  right: 90px;
+  right: 110px;
   padding: 6px 10px;
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 20px;

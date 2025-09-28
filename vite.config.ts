@@ -21,7 +21,14 @@ export default ({ mode }: any) => {
       proxy: {
         '/kn-service': {
           target: 'http://127.0.0.1:9090',
-          // target: 'https://101.126.15.58:443',
+          // target: 'https://101.126.15.58',
+          changeOrigin: true,
+          ws: false
+          // rewrite: (path) => path.replace(/^\/api/, '')
+        },
+        '/ruankao-service': {
+          target: 'http://127.0.0.1:9091',
+          // target: 'https://101.126.15.58',
           changeOrigin: true,
           ws: false
           // rewrite: (path) => path.replace(/^\/api/, '')
@@ -29,13 +36,6 @@ export default ({ mode }: any) => {
       }
     },
     build: {
-      minify: 'terser', // 启用 terser 压缩
-      terserOptions: {
-        compress: {
-          drop_console: true, // 删除 console
-          drop_debugger: true // 删除 debugger
-        }
-      },
       assetsDir: 'cc',
       target: 'esnext',
       chunkSizeWarningLimit: 2000,

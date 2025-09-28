@@ -1,550 +1,485 @@
+<!-- src/components/ruankao/ExamCalendar.vue -->
 <template>
   <div class="exam-calendar">
     <div class="calendar-header">
-      <button @click="prevMonth">&lt;</button>
-      <h2>{{ currentMonthYear }}</h2>
-      <button @click="nextMonth">&gt;</button>
+      <button class="nav-button" @click="prevMonth">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="current-month">{{ currentMonthYear }}</div>
+      <button class="nav-button" @click="nextMonth">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
-
     <div class="calendar-grid">
       <div class="weekdays">
-        <div v-for="day in weekdays" :key="day" class="weekday">{{ day }}</div>
+        <div class="weekday" v-for="day in weekdays" :key="day">{{ day }}</div>
       </div>
-
       <div class="days">
         <div
           v-for="(day, index) in days"
           :key="index"
-          :class="['day', {
-            'empty': !day.date,
-            'today': day.isToday,
-            'has-content': day.hasContent,
-            'past': day.isPast
-          }]"
-          @click="day.date && !day.isPast && openDayContent(day)"
+          class="day"
+          :class="{
+            'empty': !day,
+            'today': isToday(day),
+            'past': isPast(day),
+            'future': isFuture(day),
+            'selected': isSelected(day),
+            'has-task': day && hasTask(day),
+            'weekend': day && (day.getDay() === 0 || day.getDay() === 6)
+          }"
+          @click="selectDay(day)"
         >
-          <span v-if="day.date">{{ day.date.getDate() }}</span>
+          <span v-if="day" class="day-number">{{ day.getDate() }}</span>
+          <div v-if="day && hasTask(day)" class="task-indicator"></div>
         </div>
       </div>
     </div>
 
-    <!-- 每日内容弹窗 -->
-    <div v-if="showContentModal" class="modal" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <span class="close" @click="closeModal">&times;</span>
-        <h3>{{ selectedDate?.toDateString() }}</h3>
-        <div v-if="dayContent">
-          <h4>{{ dayContent.title }}</h4>
-          <p>{{ dayContent.description }}</p>
-          <ul>
-            <li v-for="item in dayContent.items" :key="item.id">
-              <a :href="item.link">{{ item.title }}</a>
-            </li>
-          </ul>
-        </div>
-        <div v-else>
-          <p>暂无内容</p>
-        </div>
-      </div>
+    <!-- 固定提示区域 -->
+    <div class="calendar-instruction">
+      <p>💡 点击日期查看当日学习任务</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import router from "@/router";
+import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { getCalendarDateTaskCount } from '@/api/ruankao/calendar/calendarDate'
 
-// 类型定义
-interface DayInfo {
-  date: Date | null
-  isToday: boolean
-  isPast: boolean
-  hasContent: boolean
-}
-
-interface DayContent {
-  title: string
-  description: string
-  items: Array<{
-    id: number
-    title: string
-    link: string
-  }>
-}
-
-// 配置截止日期（可以作为 prop 传入）
 const props = defineProps<{
   endDate: Date
 }>()
 
-// 响应式数据
-const currentDate = ref(new Date())
-const showContentModal = ref(false)
-const selectedDate = ref<Date | null>(null)
-const dayContent = ref<DayContent | null>(null)
+const router = useRouter()
+const currentDate = new Date()
+const currentMonth = ref(currentDate.getMonth())
+const currentYear = ref(currentDate.getFullYear())
+const taskDays = ref<Set<string>>(new Set())
 
-// 星期名称
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
 
-// 当前月份年份显示
+// 当前月份和年份
 const currentMonthYear = computed(() => {
-  return `${currentDate.value.getFullYear()}年${currentDate.value.getMonth() + 1}月`
+  return `${currentYear.value}年${currentMonth.value + 1}月`
 })
 
-// 计算当月天数
+// 获取当月天数
+const daysInMonth = (year: number, month: number) => {
+  return new Date(year, month + 1, 0).getDate()
+}
+
+// 获取当月第一天是周几
+const firstDayOfMonth = (year: number, month: number) => {
+  return new Date(year, month, 1).getDay()
+}
+
+// 生成日历天数数组
 const days = computed(() => {
-  const year = currentDate.value.getFullYear()
-  const month = currentDate.value.getMonth()
+  const daysArray: (Date | null)[] = []
+  const daysCount = daysInMonth(currentYear.value, currentMonth.value)
+  const firstDay = firstDayOfMonth(currentYear.value, currentMonth.value)
 
-  // 当月第一天
-  const firstDay = new Date(year, month, 1)
-  // 当月最后一天
-  const lastDay = new Date(year, month + 1, 0)
-  // 当月天数
-  const daysInMonth = lastDay.getDate()
-
-  // 第一天是星期几（0-6）
-  const firstDayOfWeek = firstDay.getDay()
-
-  // 构建日历数组
-  const calendarDays: DayInfo[] = []
-
-  // 添加空白天格
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    calendarDays.push({ date: null, isToday: false, isPast: false, hasContent: false })
+  // 添加空白天
+  for (let i = 0; i < firstDay; i++) {
+    daysArray.push(null)
   }
 
-  // 添加当月日期
-  const today = new Date()
-  for (let i = 1; i <= daysInMonth; i++) {
-    const date = new Date(year, month, i)
-    const isToday = date.toDateString() === today.toDateString()
-    const isPast = date < today && !isToday
-    // 这里可以根据实际数据判断是否有内容
-    const hasContent = Math.random() > 0.3 // 模拟有内容的日期
-
-    calendarDays.push({
-      date,
-      isToday,
-      isPast,
-      hasContent
-    })
+  // 添加实际日期
+  for (let i = 1; i <= daysCount; i++) {
+    daysArray.push(new Date(currentYear.value, currentMonth.value, i))
   }
 
-  return calendarDays
+  return daysArray
 })
 
-// 翻页功能
+// 检查是否为今天
+const isToday = (date: Date | null) => {
+  if (!date) return false
+  return date.toDateString() === currentDate.toDateString()
+}
+
+// 检查是否为过去日期
+const isPast = (date: Date | null) => {
+  if (!date) return false
+  return date < new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate())
+}
+
+// 检查是否为未来日期
+const isFuture = (date: Date | null) => {
+  if (!date) return false
+  return date > new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate())
+}
+
+// 检查是否为选中日期
+const selectedDate = ref<string | null>(null)
+const isSelected = (date: Date | null) => {
+  if (!date) return false
+  return selectedDate.value === formatDate(date)
+}
+
+// 检查是否有任务
+const hasTask = (date: Date | null) => {
+  if (!date) return false
+  const dateStr = formatDate(date)
+  return taskDays.value.has(dateStr)
+}
+
+// 格式化日期为 YYYY-MM-DD 格式
+const formatDate = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// 上一月
 const prevMonth = () => {
-  currentDate.value = new Date(
-    currentDate.value.getFullYear(),
-    currentDate.value.getMonth() - 1,
-    1
-  )
+  if (currentMonth.value === 0) {
+    currentMonth.value = 11
+    currentYear.value--
+  } else {
+    currentMonth.value--
+  }
 }
 
+// 下一月
 const nextMonth = () => {
-  currentDate.value = new Date(
-    currentDate.value.getFullYear(),
-    currentDate.value.getMonth() + 1,
-    1
-  )
+  if (currentMonth.value === 11) {
+    currentMonth.value = 0
+    currentYear.value++
+  } else {
+    currentMonth.value++
+  }
 }
 
-// 打开每日内容
-const openDayContent = (day: DayInfo) => {
-  if (!day.date) return
+// 选择日期
+const selectDay = (date: Date | null) => {
+  if (!date) return
 
-  // 修复日期格式化问题，保持本地时区
-  const year = day.date.getFullYear()
-  const month = String(day.date.getMonth() + 1).padStart(2, '0')
-  const date = String(day.date.getDate()).padStart(2, '0')
-  const formattedDate = `${year}-${month}-${date}`
+  // 允许点击所有日期（包括过去的日期）
+  const dateStr = formatDate(date)
+  selectedDate.value = dateStr
 
-  // 跳转到学习任务页面
+  // 跳转到任务页面
   router.push({
     name: 'StudyTask',
-    query: {
-      date: formattedDate
-    }
+    query: { date: dateStr }
   })
 }
 
-// 关闭弹窗
-const closeModal = () => {
-  showContentModal.value = false
-  selectedDate.value = null
-  dayContent.value = null
+// 获取任务数据
+const fetchTaskData = async () => {
+  try {
+    // 获取当前月份的任务数据
+    const startDate = new Date(currentYear.value, currentMonth.value, 1)
+    const endDate = new Date(currentYear.value, currentMonth.value + 1, 0)
+
+    const response = await getCalendarDateTaskCount({
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate)
+    })
+
+    if (response) {
+      taskDays.value = new Set(response)
+    }
+  } catch (error) {
+    console.error('获取任务数据失败:', error)
+    // 出错时清空任务数据
+    taskDays.value = new Set()
+  }
 }
 
-// 挂载时初始化
-onMounted(() => {
-  // 可以根据截止日期调整初始显示月份
-  const now = new Date()
-  if (now > props.endDate) {
-    currentDate.value = new Date(props.endDate)
-  } else {
-    currentDate.value = now
-  }
-})
+// 监听月份变化
+watch([currentMonth, currentYear], () => {
+  fetchTaskData()
+}, { immediate: false })
+
+// 初始化
+fetchTaskData()
 </script>
 
-<!-- 修改 ExamCalendar.vue 中的 <style scoped> 部分 -->
 <style scoped>
 .exam-calendar {
-  font-family: 'Helvetica Neue', Arial, sans-serif;
   max-width: 100%;
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  position: relative;
 }
 
 .calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 0 5px;
+  margin-bottom: 25px;
+  padding: 0 15px;
 }
 
-.calendar-header button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+.nav-button {
+  background: linear-gradient(135deg, #667eea, #764ba2);
   border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-radius: 30px;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  font-size: 16px;
-  min-width: 40px;
+  border-radius: 50%;
+  width: 40px;
   height: 40px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  color: white;
 }
 
-.calendar-header button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+.nav-button:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
-.calendar-header button:active {
-  transform: translateY(0);
+.nav-button:active {
+  transform: translateY(-1px) scale(1.05);
 }
 
-.calendar-header h2 {
-  margin: 0;
-  color: #333;
-  font-weight: 600;
+.current-month {
   font-size: 22px;
-  text-align: center;
-  flex: 1;
+  font-weight: 700;
+  color: #2c3e50;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .calendar-grid {
-  border: 1px solid #e0e0e0;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-  background: white;
+  display: flex;
+  flex-direction: column;
 }
 
 .weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  text-align: center;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 15px;
+  font-size: 16px;
 }
 
 .weekday {
-  padding: 15px 5px;
-  text-align: center;
-  font-weight: 600;
-  font-size: 16px;
+  padding: 12px 0;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  background: white;
+  gap: 8px;
 }
 
 .day {
-  min-height: 95px;
-  padding: 8px;
-  border-right: 1px solid #f0f0f0;
-  border-bottom: 1px solid #f0f0f0;
-  cursor: pointer;
-  position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  aspect-ratio: 1;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
   background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.day:nth-child(7n) {
-  border-right: none;
+.day-number {
+  font-size: 18px;
+  font-weight: 600;
+  z-index: 1;
+  transition: all 0.2s;
 }
 
-.day.empty {
-  background: #fafafa;
-  cursor: default;
+.day:not(.empty):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #f0f4ff, #e6e9ff);
 }
 
 .day.today {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
-  font-weight: bold;
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.2);
-}
-
-.day.today .day-number {
-  background: rgba(255, 255, 255, 0.2);
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-
-.day.has-content::after {
-  content: "";
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 6px;
-  height: 6px;
-  background: #409EFF;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px white, 0 0 0 4px #409EFF;
-}
-
-.day.has-content.today::after {
-  background: white;
-  box-shadow: 0 0 0 2px #764ba2, 0 0 0 4px white;
-}
-
-.day.past {
-  background: #f8f9fa;
-  color: #aaa;
-  cursor: not-allowed;
-}
-
-.day.past.has-content::after {
-  background: #ccc;
-  box-shadow: 0 0 0 2px #f8f9fa, 0 0 0 4px #ccc;
-}
-
-.day:not(.empty):not(.past):hover {
-  background: #e3f2fd;
-  transform: translateY(-3px);
-  z-index: 2;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  margin: -1px;
-  border: 1px solid #bbdefb;
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  font-weight: 700;
 }
 
 .day.today:hover {
-  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-  transform: translateY(-3px);
-  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
 }
 
-.day .day-number {
-  display: block;
-  text-align: right;
-  font-size: 16px;
-  font-weight: 500;
-  padding: 5px;
+.day.selected {
+  background: linear-gradient(135deg, #764ba2, #667eea);
+  color: white;
+  box-shadow: 0 6px 16px rgba(118, 75, 162, 0.4);
 }
 
-/* 弹窗样式 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(5px);
-  animation: fadeIn 0.3s ease-out;
+.day.selected:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(118, 75, 162, 0.5);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+.day.past {
+  color: #a0aec0;
 }
 
-.modal-content {
-  background: white;
-  padding: 30px;
-  border-radius: 20px;
-  max-width: 700px;
-  width: 90%;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-  position: relative;
-  animation: slideIn 0.3s ease-out;
+.day.past:not(.today):not(.selected):hover {
+  background: #f7fafc;
+  color: #718096;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.day.weekend {
+  color: #e53e3e;
 }
 
-.close {
+.day.weekend.today,
+.day.weekend.selected {
+  color: white;
+}
+
+/* 任务标记样式 - 更加活泼 */
+.task-indicator {
   position: absolute;
-  top: 20px;
-  right: 25px;
-  font-size: 32px;
-  cursor: pointer;
-  color: #999;
-  transition: all 0.2s;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: 6px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(135deg, #ff6b6b, #ff8e53);
   border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
+  z-index: 2;
+  animation: pulse 2s infinite;
 }
 
-.close:hover {
-  color: #333;
-  background: #f5f5f5;
-  transform: rotate(90deg);
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
+  }
+  50% {
+    transform: scale(1.2);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
+  }
 }
 
-.modal-content h3 {
-  margin-top: 0;
-  color: #333;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 15px;
-  font-size: 24px;
+/* 为有任务的日期添加额外的视觉效果 */
+.day.has-task .day-number {
+  font-weight: 700;
+  color: #ff6b6b;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.modal-content h4 {
-  color: #409EFF;
-  margin: 25px 0 15px 0;
-  font-size: 20px;
+.day.today.has-task .day-number,
+.day.selected.has-task .day-number {
+  color: white;
+  text-shadow: none;
 }
 
-.modal-content p {
-  color: #666;
-  line-height: 1.6;
-  font-size: 16px;
+.day.empty {
+  cursor: default;
+  background: transparent;
+  box-shadow: none;
 }
 
-.modal-content ul {
-  padding-left: 25px;
+.day.empty:hover {
+  background: transparent;
+  transform: none;
+  box-shadow: none;
 }
 
-.modal-content li {
-  margin-bottom: 12px;
-  line-height: 1.5;
-}
-
-.modal-content a {
-  color: #409EFF;
-  text-decoration: none;
+/* 日历使用说明 */
+.calendar-instruction {
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 14px;
+  color: #667eea;
   font-weight: 500;
-  transition: all 0.2s;
-  padding: 5px 10px;
-  border-radius: 5px;
-}
-
-.modal-content a:hover {
-  text-decoration: underline;
-  background: #ecf5ff;
-  transform: translateX(3px);
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .calendar-header h2 {
-    font-size: 18px;
+  .exam-calendar {
+    padding: 15px;
   }
 
-  .calendar-header button {
-    padding: 8px 15px;
-    font-size: 14px;
+  .calendar-header {
+    margin-bottom: 20px;
+  }
+
+  .nav-button {
+    width: 36px;
     height: 36px;
   }
 
-  .weekday {
-    padding: 12px 2px;
-    font-size: 14px;
-  }
-
-  .day {
-    min-height: 60px;
-  }
-
-  .day .day-number {
-    font-size: 14px;
-  }
-
-  .modal-content {
-    padding: 20px;
-    margin: 10px;
-  }
-
-  .modal-content h3 {
+  .current-month {
     font-size: 20px;
   }
 
-  .close {
-    top: 15px;
-    right: 15px;
-    font-size: 28px;
+  .weekdays {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .weekday {
+    padding: 10px 0;
+  }
+
+  .day-number {
+    font-size: 16px;
+  }
+
+  .task-indicator {
+    width: 8px;
+    height: 8px;
+    top: 5px;
+    right: 5px;
+  }
+
+  .calendar-instruction {
+    font-size: 13px;
+    padding: 10px;
   }
 }
 
 @media (max-width: 480px) {
-  .calendar-header {
-    margin-bottom: 15px;
+  .exam-calendar {
+    padding: 12px;
   }
 
-  .calendar-header h2 {
-    font-size: 16px;
+  .current-month {
+    font-size: 18px;
   }
 
-  .calendar-header button {
-    padding: 6px 12px;
-    font-size: 12px;
-    height: 32px;
-  }
-
-  .weekday {
-    padding: 10px 1px;
+  .weekdays {
     font-size: 12px;
   }
 
-  .day {
-    min-height: 50px;
-    padding: 5px;
-  }
-
-  .day .day-number {
-    font-size: 12px;
+  .day-number {
+    font-size: 14px;
   }
 }
 </style>

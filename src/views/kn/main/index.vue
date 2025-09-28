@@ -139,7 +139,7 @@ import 'prismjs/components/prism-properties'
 import mermaid from 'mermaid'
 import {TitleItem} from "@/components/Sidebar.vue";
 import MainBanner from "@/components/advertisement/MainBanner.vue";
-import {getArticle} from "@/api/home/home";
+import {getArticle} from "@/api/kn/home/home";
 import {ArticleVO} from "@/views/kn/console/article/type";
 import {checkIsMobile, doScrollToTop, isMobile} from "@/utils/util";
 import {setStorageArticle} from "./main";

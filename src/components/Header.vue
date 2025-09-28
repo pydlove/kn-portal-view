@@ -108,13 +108,13 @@
                 @handleSelectMenu="handleSelectMenu"
     />
 
-    <MockInterview v-model:open="showMockInterview" />
+    <MockInterview v-model:visible="showMockInterview" />
   </a-layout-header>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
-import { getRootMenus } from "../api/home/home.ts";
+import { getRootMenus } from "@/api/kn/home/home.ts";
 import { useRouter, useRoute } from "vue-router";
 import { useGlobalStore } from "../store/modules/global.ts";
 import { checkIsMobile, isMobile } from "../utils/util.ts";

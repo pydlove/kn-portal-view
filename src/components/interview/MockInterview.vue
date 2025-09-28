@@ -207,7 +207,7 @@ import {
   CheckOutlined
 } from '@ant-design/icons-vue';
 import ConfettiComponent from '../interview/ConfettiComponent.vue';
-import { getInterviewQuestions } from '../../api/interview/interview.ts';
+import { getInterviewQuestions } from '@/api/kn/interview/interview.ts';
 // 导入 marked
 import { marked } from 'marked';
 
@@ -804,7 +804,6 @@ pre[class*="language-"] code[class*="language-"] {
   overflow: auto;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   table-layout: auto;
-  //display: block;
 }
 
 .fullstack-page .ms-md-content table {
