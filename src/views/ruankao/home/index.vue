@@ -1,6 +1,23 @@
 <!-- src/views/ruankao/home/index.vue -->
 <template>
   <div class="home-container">
+    <!-- 添加建设中提示弹窗 -->
+    <div v-if="showConstructionModal" class="construction-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>🏗️ 网站建设中</h2>
+        </div>
+        <div class="modal-body">
+          <p>本网站暂时不支持手机端，内容正在紧张建设中...</p>
+          <p>预计开放时间：国庆节后第一天</p>
+          <p>敬请期待！</p>
+        </div>
+        <div class="modal-footer">
+          <button class="confirm-btn" @click="closeModal">我知道了</button>
+        </div>
+      </div>
+    </div>
+
     <div class="cross-promotion-banner">
       <div class="promotion-content">
         <div class="promotion-text">
@@ -210,6 +227,27 @@ const goToJavaSite = () => {
   router.push('/home')
 }
 
+const showConstructionModal = ref(true)
+
+// 关闭弹窗方法
+const closeModal = () => {
+  showConstructionModal.value = false
+}
+
+// 检查是否已经显示过弹窗（可选功能）
+onMounted(() => {
+  const hasSeenModal = localStorage.getItem('constructionModalShown')
+  if (hasSeenModal) {
+    showConstructionModal.value = false
+  }
+})
+
+// 标记已显示弹窗（可选功能）
+const closeConstructionModal = () => {
+  showConstructionModal.value = false
+  localStorage.setItem('constructionModalShown', 'true')
+}
+
 onMounted(() => {
   timer = setInterval(() => {
     currentTime.value = new Date()
@@ -239,6 +277,72 @@ const minutesUntilExam = computed(() => {
 </script>
 
 <style scoped>
+
+.construction-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header h2 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.8rem;
+}
+
+.modal-body p {
+  margin: 10px 0;
+  color: #666;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+}
+
+.confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
 /* 产品互推横幅 */
 .cross-promotion-banner {
   background: linear-gradient(135deg, #ffd8a6 0%, #ff6b6b 100%);
