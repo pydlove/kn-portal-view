@@ -100,9 +100,9 @@
           </div>
 
           <!-- 翻页式Banner -->
-           <keep-alive>
-            <MainBanner />
-           </keep-alive>
+          <keep-alive>
+            <MainBanner/>
+          </keep-alive>
         </div>
 
         <RightTool ref="rightToolRef" @toggleSidebar="toggleSidebar"
@@ -201,7 +201,18 @@ const generateTOC = (markdown: string) => {
   const lines = markdown.split('\n')
   const toc: Array<{ id: string, title: string, level: number }> = []
 
+  let inCodeBlock = false
+
   lines.forEach(line => {
+    // 检查是否进入或退出代码块
+    if (line.trim().startsWith('```')) {
+      inCodeBlock = !inCodeBlock
+      return
+    }
+    if (inCodeBlock) {
+      return
+    }
+
     const headingMatch = line.match(/^(#{1,6})\s+(.*)/)
     if (headingMatch) {
       const level = headingMatch[1].length
@@ -238,6 +249,16 @@ const scrollToSection = (id: string) => {
   }
 }
 
+// 重置滚动位置到顶部
+const resetScroll = () => {
+  nextTick(() => {
+    const articleContentElement = document.querySelector('.article-content');
+    if (articleContentElement) {
+      articleContentElement.scrollTop = 0;
+    }
+  });
+}
+
 // 返回顶部功能
 const scrollToTop = () => {
   // 获取文章内容容器元素
@@ -248,16 +269,20 @@ const scrollToTop = () => {
 const loadArticleContent = async () => {
 
   // 修正判断条件
+
   if (!title.value || !title.value.articleId) return
 
   try {
     // 获取文章内容
     const articleData = await getArticle({articleId: title.value.articleId})
+
     articleContent.value = articleData
-    console.log('文章内容:', articleData)
+
+    resetScroll()
 
     // 生成目录
     generateTOC(articleData.articleContent)
+
   } catch (error) {
     console.error('加载文章内容失败:', error)
   }
@@ -279,6 +304,16 @@ const checkFirstArticle = () => {
 onMounted(() => {
 
   checkIsMobile()
+
+  nextTick(() => {
+    const articleContentElement = document.querySelector('.article-content');
+    if (articleContentElement) {
+      articleContentElement.addEventListener('scroll', saveScrollPosition);
+
+      // 页面加载时恢复滚动位置
+      restoreScrollPosition();
+    }
+  });
 
   mermaid.initialize({
     startOnLoad: true,
