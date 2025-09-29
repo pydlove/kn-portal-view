@@ -126,6 +126,12 @@
         placeholder="请输入答案解析"
         :auto-size="{ minRows: 3, maxRows: 6 }"
       />
+      <div class="toolbar-buttons" style="margin-top: 5px;">
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'red')">红色文字</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'bold')" style="margin-left: 8px">粗体</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'code')" style="margin-left: 8px">代码</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'image')" style="margin-left: 5px">图片</a-button>
+      </div>
     </a-form-item>
 
     <a-form-item :wrapper-col="{ span: 14, offset: 4 }">
@@ -179,6 +185,60 @@ const options = ref<Option[]>([
 ]);
 
 const selectedAnswers = ref<string[]>([]);
+
+// 添加插入 Markdown 模板的方法
+const insertMarkdownTemplate = (field: string, indexOrStyle: any, style?: string) => {
+  let template = '';
+
+  // 确定要插入的模板
+  if (field === 'title' || field === 'analysis') {
+    switch (indexOrStyle) {
+      case 'red':
+        template = "<span style='color:red'>重要文字</span>";
+        break;
+      case 'bold':
+        template = "**粗体文字**";
+        break;
+      case 'code':
+        template = "`代码片段`";
+        break;
+      case 'image':
+        template = "![图片描述](图片链接)";
+        break;
+    }
+  } else if (field === 'option') {
+    const index = indexOrStyle;
+    switch (style) {
+      case 'red':
+        template = "<span style='color:red'>重要文字</span>";
+        break;
+      case 'bold':
+        template = "**粗体文字**";
+        break;
+      case 'code':
+        template = "`代码片段`";
+        break;
+    }
+
+    // 插入到指定选项
+    if (template) {
+      const currentContent = options.value[index].content;
+      options.value[index].content = currentContent + (currentContent ? ' ' : '') + template;
+    }
+    return;
+  }
+
+  // 插入到指定字段
+  if (template) {
+    if (field === 'title') {
+      const currentTitle = formState.title;
+      formState.title = currentTitle + (currentTitle ? ' ' : '') + template;
+    } else if (field === 'analysis') {
+      const currentAnalysis = formState.analysis;
+      formState.analysis = currentAnalysis + (currentAnalysis ? ' ' : '') + template;
+    }
+  }
+};
 
 const addOption = () => {
   const nextLabel = String.fromCharCode(65 + options.value.length);

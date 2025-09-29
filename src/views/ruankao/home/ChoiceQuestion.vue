@@ -1,7 +1,7 @@
 <!-- src/components/ChoiceQuestion.vue -->
 <template>
   <div class="question-content">
-    <h3 class="question-title">问题：{{ question.title }}</h3>
+    <h3 class="question-title">问题：<span v-html="renderMarkdown(question.title)"></span></h3>
     <div class="question-difficulty">
       <span class="difficulty-label">难度：</span>
       <span class="difficulty-value" :class="difficultyClass">

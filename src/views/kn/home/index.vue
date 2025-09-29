@@ -18,22 +18,6 @@
       </div>
     </div>
 
-    <!-- 软考产品互推横幅 -->
-    <div v-if="!isMobile" class="cross-promotion-banner">
-      <div class="promotion-content">
-        <div class="promotion-text">
-          <h3>🎯 准备软考？我们也有专业的软考冲刺计划</h3>
-          <p>30天高效备考，精准预测考点，助你轻松通过软考</p>
-        </div>
-        <div class="promotion-actions">
-          <button class="btn btn-secondary" @click="goToRuankaoSite">
-            前往冲刺软考
-            <span class="external-icon">↗</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- Banner 区域 -->
     <section class="banner">
       <div class="banner-content">
@@ -78,6 +62,22 @@
         </div>
       </div>
     </section>
+
+    <!-- 软考产品互推横幅 -->
+    <div v-if="!isMobile" class="cross-promotion-banner">
+      <div class="promotion-content">
+        <div class="promotion-text">
+          <h3>🎯 准备软考？我们也有专业的软考冲刺计划</h3>
+          <p>30天高效备考，精准预测考点，助你轻松通过软考</p>
+        </div>
+        <div class="promotion-actions">
+          <button class="btn btn-secondary" @click="goToRuankaoSite">
+            前往冲刺软考
+            <span class="external-icon">↗</span>
+          </button>
+        </div>
+      </div>
+    </div>
 
     <main class="main-content">
       <div class="content-wrapper">
