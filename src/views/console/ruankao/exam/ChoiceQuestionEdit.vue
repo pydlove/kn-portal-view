@@ -266,6 +266,7 @@ const handleSubmit = async () => {
     };
 
     const choiceData = {
+      id: Number(props.id),
       questionId: Number(props.questionId),
       choiceType: formState.choiceType,
       correctAnswers: formState.choiceType === 1

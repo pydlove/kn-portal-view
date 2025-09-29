@@ -100,7 +100,9 @@
           </div>
 
           <!-- 翻页式Banner -->
-          <MainBanner />
+           <keep-alive>
+            <MainBanner />
+           </keep-alive>
         </div>
 
         <RightTool ref="rightToolRef" @toggleSidebar="toggleSidebar"
