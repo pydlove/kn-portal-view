@@ -17,6 +17,13 @@
         placeholder="请输入题目内容"
         :auto-size="{ minRows: 3, maxRows: 6 }"
       />
+      <div class="toolbar-buttons" style="margin-top: 5px;">
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'red')">红色文字</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'bold')" style="margin-left: 8px">粗体</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'code')" style="margin-left: 8px">代码</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'image')" style="margin-left: 5px">图片</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'hdck')" style="margin-left: 5px">回答此空</a-button>
+      </div>
     </a-form-item>
 
     <!-- 难度等级 -->
@@ -207,6 +214,9 @@ const insertMarkdownTemplate = (field: string, indexOrStyle: any, style?: string
         break;
       case 'image':
         template = "![图片描述](图片链接)";
+        break;
+      case 'hdck':
+        template = "（回答此空）";
         break;
     }
   } else if (field === 'option') {
