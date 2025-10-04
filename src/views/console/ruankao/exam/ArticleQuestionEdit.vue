@@ -19,6 +19,14 @@
     </a-form-item>
 
     <a-form-item
+      label="文章分类"
+      name="categoryName"
+      :rules="[{ required: true, message: '请输入文章分类' }]"
+    >
+      <a-input v-model:value="formState.categoryName" placeholder="请输入文章分类" />
+    </a-form-item>
+
+    <a-form-item
       label="文章内容"
       name="content"
       :rules="[{ required: true, message: '请输入文章内容' }]"
@@ -41,6 +49,13 @@
           <div class="markdown-preview" v-html="renderedMarkdown"></div>
         </a-tab-pane>
       </a-tabs>
+
+      <div class="toolbar-buttons" style="margin-top: 5px;">
+        <a-button size="small" @click="insertMarkdownTemplate('content', 'red', formState)">红色文字</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('content', 'bold', formState)" style="margin-left: 8px">粗体</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('content', 'code', formState)" style="margin-left: 8px">代码</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('content', 'image', formState)" style="margin-left: 5px">图片</a-button>
+      </div>
     </a-form-item>
 
     <a-form-item :wrapper-col="{ span: 14, offset: 4 }">
@@ -57,6 +72,7 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import { message } from 'ant-design-vue';
 import { marked } from 'marked';
 import { getQuestion, getArticleDetail, updateQuestion, updateArticleDetail } from '@/api/ruankao/exam/exam.ts';
+import {insertMarkdownTemplate} from "@/utils/markdownUtils";
 
 const props = defineProps<{
   questionId: string;
@@ -82,7 +98,8 @@ const formState = reactive({
   difficulty: undefined as number | undefined,
   score: undefined as number | undefined,
   type: 'ARTICLE',
-  content: ''
+  content: '',
+  categoryName: ''
 });
 
 const fetchDetail = async () => {
@@ -97,6 +114,7 @@ const fetchDetail = async () => {
     formState.difficulty = question.difficulty;
     formState.score = question.score;
     formState.type = question.type;
+    formState.categoryName = question.categoryName;
     formState.content = articleDetail.content;
   } catch (error) {
     console.error('获取文章题详情失败', error);
@@ -116,6 +134,7 @@ const handleSubmit = async () => {
       title: formState.title,
       difficulty: formState.difficulty,
       score: formState.score,
+      categoryName: formState.categoryName,
       type: formState.type
     };
 

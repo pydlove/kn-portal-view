@@ -3,6 +3,7 @@ export interface RkExamQuestion {
   id?: number;
   type?: string;
   title?: string;
+  categoryName?: string;
   score?: number;
   difficulty?: number;
   status?: number;

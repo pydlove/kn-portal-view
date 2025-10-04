@@ -160,6 +160,12 @@ const columns = [
     width: 100
   },
   {
+    title: '分类',
+    dataIndex: 'categoryName',
+    key: 'categoryName',
+    width: 150
+  },
+  {
     title: '题目内容',
     dataIndex: 'title',
     key: 'title',
@@ -311,6 +317,8 @@ onMounted(() => {
 <style scoped>
 .exam-container {
   padding: 16px;
+  overflow: auto;
+  height: calc(100vh);
 }
 
 .search-form {

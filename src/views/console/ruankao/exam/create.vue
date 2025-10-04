@@ -67,5 +67,7 @@ const handleCancel = () => {
 <style scoped>
 .question-create-container {
   padding: 16px;
+  overflow: auto;
+  height: calc(100vh);
 }
 </style>

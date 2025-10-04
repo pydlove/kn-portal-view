@@ -18,12 +18,20 @@
         :auto-size="{ minRows: 3, maxRows: 6 }"
       />
       <div class="toolbar-buttons" style="margin-top: 5px;">
-        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'red')">红色文字</a-button>
-        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'bold')" style="margin-left: 8px">粗体</a-button>
-        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'code')" style="margin-left: 8px">代码</a-button>
-        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'image')" style="margin-left: 5px">图片</a-button>
-        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'hdck')" style="margin-left: 5px">回答此空</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('title', 'red', formState)">红色文字</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('title', 'bold', formState)" style="margin-left: 8px">粗体</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('title', 'code', formState)" style="margin-left: 8px">代码</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('title', 'image', formState)" style="margin-left: 5px">图片</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('title', 'hdck', formState)" style="margin-left: 5px">回答此空</a-button>
       </div>
+    </a-form-item>
+
+    <a-form-item
+      label="文章分类"
+      name="categoryName"
+      :rules="[{ required: true, message: '请输入文章分类' }]"
+    >
+      <a-input v-model:value="formState.categoryName" placeholder="请输入文章分类" />
     </a-form-item>
 
     <!-- 难度等级 -->
@@ -139,10 +147,10 @@
         :auto-size="{ minRows: 3, maxRows: 6 }"
       />
       <div class="toolbar-buttons" style="margin-top: 5px;">
-        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'red')">红色文字</a-button>
-        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'bold')" style="margin-left: 8px">粗体</a-button>
-        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'code')" style="margin-left: 8px">代码</a-button>
-        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'image')" style="margin-left: 5px">图片</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'red', formState)">红色文字</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'bold', formState)" style="margin-left: 8px">粗体</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'code', formState)" style="margin-left: 8px">代码</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('analysis', 'image', formState)" style="margin-left: 5px">图片</a-button>
       </div>
     </a-form-item>
 
@@ -159,6 +167,7 @@
 import { ref, reactive, watch } from 'vue';
 import { message } from 'ant-design-vue';
 import { createChoiceQuestion } from '@/api/ruankao/exam/exam.ts';
+import {insertMarkdownTemplate} from "@/utils/markdownUtils";
 
 const emit = defineEmits<{
   (e: 'submit'): void;
@@ -180,6 +189,7 @@ const formState = reactive({
   type: 'CHOICE',
   choiceType: 1, // 1-单选 2-多选
   correctAnswers: '',
+  categoryName: '',
   analysis: ''
 });
 
@@ -196,62 +206,6 @@ const confirmLoading = ref(false);
 const labelCol = { span: 4 };
 const wrapperCol = { span: 14 };
 
-// 添加插入 Markdown 模板的方法
-const insertMarkdownTemplate = (field: string, indexOrStyle: any, style?: string) => {
-  let template = '';
-
-  // 确定要插入的模板
-  if (field === 'title' || field === 'analysis') {
-    switch (indexOrStyle) {
-      case 'red':
-        template = "<span style='color:red'>重要文字</span>";
-        break;
-      case 'bold':
-        template = "**粗体文字**";
-        break;
-      case 'code':
-        template = "`代码片段`";
-        break;
-      case 'image':
-        template = "![图片描述](图片链接)";
-        break;
-      case 'hdck':
-        template = "（回答此空）";
-        break;
-    }
-  } else if (field === 'option') {
-    const index = indexOrStyle;
-    switch (style) {
-      case 'red':
-        template = "<span style='color:red'>重要文字</span>";
-        break;
-      case 'bold':
-        template = "**粗体文字**";
-        break;
-      case 'code':
-        template = "`代码片段`";
-        break;
-    }
-
-    // 插入到指定选项
-    if (template) {
-      const currentContent = options.value[index].content;
-      options.value[index].content = currentContent + (currentContent ? ' ' : '') + template;
-    }
-    return;
-  }
-
-  // 插入到指定字段
-  if (template) {
-    if (field === 'title') {
-      const currentTitle = formState.title;
-      formState.title = currentTitle + (currentTitle ? ' ' : '') + template;
-    } else if (field === 'analysis') {
-      const currentAnalysis = formState.analysis;
-      formState.analysis = currentAnalysis + (currentAnalysis ? ' ' : '') + template;
-    }
-  }
-};
 // 添加选项
 const addOption = () => {
   const nextLabel = String.fromCharCode(65 + options.value.length);
@@ -320,6 +274,7 @@ const handleSubmit = async () => {
       title: formState.title,
       difficulty: formState.difficulty,
       score: formState.score,
+      categoryName: formState.categoryName,
       type: 'CHOICE'
     };
 

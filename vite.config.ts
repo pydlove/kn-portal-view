@@ -20,15 +20,15 @@ export default ({ mode }: any) => {
       open: true,
       proxy: {
         '/kn-service': {
-          // target: 'http://127.0.0.1:9090',
-          target: 'http://101.126.15.58',
+          target: 'http://127.0.0.1:9090',
+          // target: 'http://101.126.15.58',
           changeOrigin: true,
           ws: false
           // rewrite: (path) => path.replace(/^\/api/, '')
         },
         '/ruankao-service': {
-          // target: 'http://127.0.0.1:9091',
-          target: 'http://101.126.15.58',
+          target: 'http://127.0.0.1:9091',
+          // target: 'http://101.126.15.58',
           changeOrigin: true,
           ws: false
           // rewrite: (path) => path.replace(/^\/api/, '')

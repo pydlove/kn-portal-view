@@ -123,6 +123,8 @@ onMounted(() => {
 <style scoped>
 .question-edit-container {
   padding: 16px;
+  overflow: auto;
+  height: calc(100vh);
 }
 
 .loading-container {
