@@ -9,7 +9,7 @@ export const insertMarkdownTemplate = (
   // 确定要插入的模板
   switch (indexOrStyle) {
     case 'red':
-      template = "<span style='color:red'>重要文字</span>";
+      template = "<span style='color:red'>【重要】</span>";
       break;
     case 'bold':
       template = "**粗体文字**";
@@ -29,7 +29,35 @@ export const insertMarkdownTemplate = (
   if (template) {
     if (field === 'title') {
       const currentTitle = formState.title;
-      formState.title = currentTitle + (currentTitle ? ' ' : '') + template;
+
+      if (indexOrStyle === 'hdck1') {
+        // 替换第一个（）
+        formState.title = currentTitle.replace('（）', template);
+      } else if (indexOrStyle === 'hdck2') {
+        // 替换第二个（）
+        const firstIndex = currentTitle.indexOf('（）');
+        if (firstIndex !== -1) {
+          const secondIndex = currentTitle.indexOf('（）', firstIndex + 1);
+          if (secondIndex !== -1) {
+            formState.title = currentTitle.substring(0, secondIndex) +
+              template +
+              currentTitle.substring(secondIndex + 2);
+          }
+        }
+      } else if (indexOrStyle === 'hdck3') {
+        // 替换第三个（）
+        let count = 0;
+        formState.title = currentTitle.replace(/（）/g, (match) => {
+          count++;
+          if (count === 3) {
+            return template;
+          }
+          return match;
+        });
+      } else {
+        formState.title = currentTitle + (currentTitle ? ' ' : '') + template;
+      }
+
     } else if (field === 'analysis') {
       const currentAnalysis = formState.analysis;
       formState.analysis = currentAnalysis + (currentAnalysis ? ' ' : '') + template;

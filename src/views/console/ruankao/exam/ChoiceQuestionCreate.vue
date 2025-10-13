@@ -23,6 +23,9 @@
         <a-button size="small" @click="insertMarkdownTemplate('title', 'code', formState)" style="margin-left: 8px">代码</a-button>
         <a-button size="small" @click="insertMarkdownTemplate('title', 'image', formState)" style="margin-left: 5px">图片</a-button>
         <a-button size="small" @click="insertMarkdownTemplate('title', 'hdck', formState)" style="margin-left: 5px">回答此空</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('title', 'hdck1', formState)" style="margin-left: 5px">回答此空1</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('title', 'hdck2', formState)" style="margin-left: 5px">回答此空2</a-button>
+        <a-button size="small" @click="insertMarkdownTemplate('title', 'hdck3', formState)" style="margin-left: 5px">回答此空3</a-button>
       </div>
     </a-form-item>
 

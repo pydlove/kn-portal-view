@@ -7,7 +7,6 @@ export const goToMainPage = (router: Router, rootMenuId: number, type: string, s
     query: {
       menuId: rootMenuId,
       selectFirst: selectFirst,
-      time: new Date().getTime(),
       type: type
     }
   });
